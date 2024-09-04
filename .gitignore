@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 hector-CEDS.Rproj
+*.DS_Store
