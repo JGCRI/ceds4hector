@@ -1,0 +1,15 @@
+# Incomplete mapping table btween rcmip and ceds units, this should probably map all the CEDS sectors to the RCMIP aggregation but we are short ontime ,,,,
+# cf is the conversion factor from RCMIP units to CEDS units,,,,,
+rcmip_variable,rcmip_units,ceds_sector,ceds_units,cf,em 
+Emissions|BC|MAGICC AFOLU|Agricultural Waste Burning,Mt,0,ktC,1000,BC
+Emissions|BC|MAGICC AFOLU|Forest Burning,Mt,0,ktC,1000,BC
+Emissions|BC|MAGICC AFOLU|Grassland Burning,Mt,0,ktC,1000,BC
+Emissions|BC|MAGICC AFOLU|Peat Burning,Mt,0,ktC,1000,BC
+Emissions|OC|MAGICC AFOLU|Forest Burning,Mt,0,ktC,1000,OC
+Emissions|OC|MAGICC AFOLU|Grassland Burning,Mt,0,ktC,1000,OC
+Emissions|OC|MAGICC AFOLU|Peat Burning,Mt,0,ktC,1000,OC
+Emissions|OC|MAGICC AFOLU|Agricultural Waste Burning,Mt,0,ktC,1000,OC
+Emissions|NH3|MAGICC AFOLU|Forest Burning,Mt,0,kt,1000,NH3
+Emissions|NH3|MAGICC AFOLU|Grassland Burning,Mt,0,kt,1000,NH3
+Emissions|NH3|MAGICC AFOLU|Peat Burning,Mt,0,kt,1000,NH3
+Emissions|NH3|MAGICC AFOLU|Agricultural Waste Burning,Mt,0,kt,1000,NH3

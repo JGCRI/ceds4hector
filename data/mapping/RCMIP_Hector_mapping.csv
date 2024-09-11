@@ -10,9 +10,9 @@ NOX_emissions, Tg N year-1, 1/14.007 Tg year-1,Emissions|NOx, Mt NOx year-1, Mt 
 CO_emissions, Tg CO year-1, Tg year-1,Emissions|CO, Mt CO year-1, Mt year-1,0
 NMVOC_emissions, Tg NMVOC year-1, Tg year-1,Emissions|VOC, Mt VOC year-1, Mt year-1,0
 N2O_emissions, Tg N year-1, 44.014/28.014 Tg year-1,Emissions|N2O, kt N2O year-1, 1000 t year-1,0
-BC_emissions, Tg year-1, Tg year-1,Emissions|BC, Mt BC year-1, Mt year-1,0
-NH3_emissions, Tg year-1, Tg year-1,Emissions|NH3,Mt NH3/yr, Mt year-1,0
-OC_emissions, Tg year-1, Tg year-1,Emissions|OC, Mt OC year-1, Mt year-1,0
+BC_emissions,Tg, Tg year-1,Emissions|BC, Mt BC year-1, Mt year-1,1
+NH3_emissions, Tg year-1, Tg year-1,Emissions|NH3,Mt NH3/yr, Mt year-1,1
+OC_emissions, Tg year-1, Tg year-1,Emissions|OC, Mt OC year-1, Mt year-1,1
 HFC125_emissions,Gg, ppt,Emissions|F-Gases|HFC|HFC125,kt, ppt,1
 HFC134a_emissions,Gg, ppt,Emissions|F-Gases|HFC|HFC134a,kt, ppt,1
 HFC143a_emissions,Gg, ppt,Emissions|F-Gases|HFC|HFC143a,kt, ppt,1
