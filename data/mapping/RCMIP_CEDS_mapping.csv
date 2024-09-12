@@ -1,15 +1,35 @@
-# Incomplete mapping table btween rcmip and ceds units, this should probably map all the CEDS sectors to the RCMIP aggregation but we are short ontime ,,,,
-# cf is the conversion factor from RCMIP units to CEDS units,,,,,
-rcmip_variable,rcmip_units,ceds_sector,ceds_units,cf,em 
-Emissions|BC|MAGICC AFOLU|Agricultural Waste Burning,Mt,0,ktC,1000,BC
-Emissions|BC|MAGICC AFOLU|Forest Burning,Mt,0,ktC,1000,BC
-Emissions|BC|MAGICC AFOLU|Grassland Burning,Mt,0,ktC,1000,BC
-Emissions|BC|MAGICC AFOLU|Peat Burning,Mt,0,ktC,1000,BC
-Emissions|OC|MAGICC AFOLU|Forest Burning,Mt,0,ktC,1000,OC
-Emissions|OC|MAGICC AFOLU|Grassland Burning,Mt,0,ktC,1000,OC
-Emissions|OC|MAGICC AFOLU|Peat Burning,Mt,0,ktC,1000,OC
-Emissions|OC|MAGICC AFOLU|Agricultural Waste Burning,Mt,0,ktC,1000,OC
-Emissions|NH3|MAGICC AFOLU|Forest Burning,Mt,0,kt,1000,NH3
-Emissions|NH3|MAGICC AFOLU|Grassland Burning,Mt,0,kt,1000,NH3
-Emissions|NH3|MAGICC AFOLU|Peat Burning,Mt,0,kt,1000,NH3
-Emissions|NH3|MAGICC AFOLU|Agricultural Waste Burning,Mt,0,kt,1000,NH3
+# Incomplete mapping table btween rcmip and ceds units, this should probably map all the CEDS sectors to the RCMIP aggregation but we are short ontime ,,,
+# cf is the conversion factor from RCMIP units to CEDS units,,,,
+rcmip_variable,rcmip_units,ceds_units,cf,em 
+Emissions|BC|MAGICC AFOLU|Agricultural Waste Burning,Mt,ktC,1000,BC
+Emissions|BC|MAGICC AFOLU|Forest Burning,Mt,ktC,1000,BC
+Emissions|BC|MAGICC AFOLU|Grassland Burning,Mt,ktC,1000,BC
+Emissions|BC|MAGICC AFOLU|Peat Burning,Mt,ktC,1000,BC
+Emissions|OC|MAGICC AFOLU|Forest Burning,Mt,ktC,1000,OC
+Emissions|OC|MAGICC AFOLU|Grassland Burning,Mt,ktC,1000,OC
+Emissions|OC|MAGICC AFOLU|Peat Burning,Mt,ktC,1000,OC
+Emissions|OC|MAGICC AFOLU|Agricultural Waste Burning,Mt,ktC,1000,OC
+Emissions|NH3|MAGICC AFOLU|Forest Burning,Mt,kt,1000,NH3
+Emissions|NH3|MAGICC AFOLU|Grassland Burning,Mt,kt,1000,NH3
+Emissions|NH3|MAGICC AFOLU|Peat Burning,Mt,kt,1000,NH3
+Emissions|NH3|MAGICC AFOLU|Agricultural Waste Burning,Mt,kt,1000,NH3
+Emissions|VOC|MAGICC AFOLU|Forest Burning,Mt,kt,1000,NMVOC
+Emissions|VOC|MAGICC AFOLU|Grassland Burning,Mt,kt,1000,NMVOC
+Emissions|VOC|MAGICC AFOLU|Peat Burning,Mt,kt,1000,NMVOC
+Emissions|VOC|MAGICC AFOLU|Agricultural Waste Burning,Mt,kt,1000,NMVOC
+Emissions|CO|MAGICC AFOLU|Forest Burning,Mt CO,k t CO,1000,CO
+Emissions|CO|MAGICC AFOLU|Grassland Burning,Mt CO,k t CO,1000,CO
+Emissions|CO|MAGICC AFOLU|Peat Burning,Mt CO,k t CO,1000,CO
+Emissions|CO|MAGICC AFOLU|Agricultural Waste Burning,Mt CO,k t CO,1000,CO
+Emissions|CH4|MAGICC AFOLU|Forest Burning,Mt CH4,kt CH4,1000,CH4
+Emissions|CH4|MAGICC AFOLU|Grassland Burning,Mt CH4,kt CH4,1000,CH4
+Emissions|CH4|MAGICC AFOLU|Peat Burning,Mt CH4,kt CH4,1000,CH4
+Emissions|CH4|MAGICC AFOLU|Agricultural Waste Burning,Mt CH4,kt CH4,1000,CH4
+Emissions|NOx|MAGICC AFOLU|Forest Burning,Mt NOx,kt N2O,478,NOx
+Emissions|NOx|MAGICC AFOLU|Grassland Burning,Mt NOx,kt N2O,478,NOx
+Emissions|NOx|MAGICC AFOLU|Peat Burning,Mt NOx,kt N2O,478,NOx
+Emissions|NOx|MAGICC AFOLU|Agricultural Waste Burning,Mt NOx,kt N2O,478,NOx
+Emissions|Sulfur|MAGICC AFOLU|Forest Burning,Mt SO2,kt SO2,1000,SO2
+Emissions|Sulfur|MAGICC AFOLU|Grassland Burning,Mt SO2,kt SO2,1000,SO2
+Emissions|Sulfur|MAGICC AFOLU|Peat Burning,Mt SO2,kt SO2,1000,SO2
+Emissions|Sulfur|MAGICC AFOLU|Agricultural Waste Burning,Mt SO2,kt SO2,1000,SO2

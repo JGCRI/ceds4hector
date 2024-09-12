@@ -1,0 +1,13 @@
+# Incomplete mapping table ceds and hector, this should probably map all the CEDS sectors to the RCMIP aggregation but we are short ontime ,,,,
+# cf is the conversion factor from CEDS to Hector,,,,,
+ceds_variable,ceds_units,cf,hector_variable,hector_units,notes_on_cf
+SO2,ktSO2,0.5,SO2_emissions,Gg S,(32/64)
+BC,ktC,0.001,BC_emissions,Tg,
+CH4,ktCH4,0.001,CH4_emissions,Tg CH4,
+CO,ktCO,0.001,CO_emissions,Tg CO,
+CO2,ktCO2,2.72727E-07,ffi_emissions,Pg C/yr,(12/44) *  0.00001 
+N2O,ktN2O,0.000636364,N2O_emissions,Tg N,(28/44) * 0.001
+NH3,ktNH3,0.001,NH3_emissions,Tg,
+NMVOC,ktNMVOC,0.001,NMVOC_emissions,Tg NMVOC,
+NOx,ktNO2,0.000304348,NOX_emissions,Tg N,(14/46)*0.001
+OC,ktC,0.001,OC_emissions,Tg,
