@@ -4,3 +4,5 @@
 .Ruserdata
 hector-CEDS.Rproj
 *.DS_Store
+*.html
+*/scratch/

@@ -1,13 +1,9 @@
-# Define project constants, TBD if these should only be for the L0 or global project
-# constants. Could also include functions here if that would be helpful but that
-# it TBD.
-
+# Read in R packages and define project constants
 # 0. Load packages -------------------------------------------------------------
 library(assertthat)
 library(dplyr)
 library(tidyr)
 library(zoo)
-
 
 # TODO probably use a package manager but for now this is probably good enough
 stopifnot(packageVersion("dplyr") == "1.1.4")
