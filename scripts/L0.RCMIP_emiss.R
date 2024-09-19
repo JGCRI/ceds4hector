@@ -9,6 +9,10 @@
 # B) Probably need to flesh out the RCMIP to Hector portion of the code so that
 #       the full scenarios are copied over.
 # C) Need to change the list of scenarios that are being processed by this script.
+# UP NEXT
+#       need to grab the other required inputs aka SV and albedo so then can set
+#       up the full tables... actually what might be helpful is to do a comparison
+#       between the variables in the
 
 
 # 0. Set Up -------------------------------------------------------------------
@@ -76,7 +80,8 @@ read.csv(rcmip_file) %>%
 
 # Load the RCMIP to Hector mapping file.
 rcmip_hector_mapping <- read.csv(file = file.path(DIRS$MAPPING, "RCMIP_Hector_mapping.csv"),
-                                 comment.char = "#")
+                                 comment.char = "#") %>%
+    select(-cf_notes)
 
 # Gather all of the non CEDS emission species in a data frame and change from
 # wide to long orientation, apply the conversion factor and save output.
@@ -93,8 +98,30 @@ rcmip_long %>%
     select(scenario = Scenario, year = year, value,
            variable = hector_variable, units = hector_unit) %>%
     na.omit ->
-    hector_rcmip_nonceds_emiss_df1
+    hector_rcmip_nonceds_emiss_some_neg
 
+# Since Hector requires strictly positive emissions the CO2 emissions and uptake
+# will need to be modified.
+hector_rcmip_nonceds_emiss_some_neg %>%
+    filter(variable %in% c(FFI_EMISSIONS(), LUC_EMISSIONS())) %>%
+    select(scenario, year, value, variable) %>%
+    pivot_wider(id_cols = c(scenario, year), names_from = variable) %>%
+    mutate("daccs_uptake" = 0,
+           "luc_uptake" = 0) %>%
+    mutate(daccs_uptake = ifelse(ffi_emissions < 0, -1 * ffi_emissions, 0),
+           luc_uptake = ifelse(luc_emissions < 0, -1 * luc_emissions, 0)) %>%
+    mutate(luc_emissions = ifelse(luc_emissions < 0, 0, luc_emissions),
+           ffi_emissions = ifelse(ffi_emissions < 0, 0, ffi_emissions)) %>%
+    pivot_longer(cols = -c(year, scenario), names_to = "variable") %>%
+    mutate(units = getunits(FFI_EMISSIONS())) ->
+    hector_rcmip_nonceds_emiss_cc_emiss
+
+
+ # Add the processed co2 emissions to the emissions df.
+hector_rcmip_nonceds_emiss_some_neg %>%
+    filter(!variable %in% hector_rcmip_nonceds_emiss_cc_emiss$variable) %>%
+    rbind(hector_rcmip_nonceds_emiss_cc_emiss) ->
+    hector_rcmip_nonceds_emiss_df1
 
 # L1 is where all the emissions in Hector units are saved.
 write.csv(hector_rcmip_nonceds_emiss_df1,
