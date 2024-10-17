@@ -87,6 +87,9 @@ diff_df$dif %>% summary()
 
 # 2. Functionalize get hector n2o emissions  -----------------------------------
 # Back calculate total N2O emissions for Hector based on a time series of N2O concentrations
+# Args
+#   input_df: data.frame of the N2O concentrations
+# Return: data.frame of the N2O emissions, in the same format as Hector input/output
 get_hector_n2o_emissions <- function(input_df){
 
     # Quality check the inputs, make sure we are working with the right units and
@@ -120,10 +123,12 @@ get_hector_n2o_emissions <- function(input_df){
 
 
     data.frame(year = yrs,
-               value = emiss) %>%
-        # filter(year %in% yrs) %>%
+               value = emiss,
+               variable = EMISSIONS_N2O(),
+               units = getunits(EMISSIONS_N2O())) %>%
         na.omit ->
         out
+
     return(out)
 }
 

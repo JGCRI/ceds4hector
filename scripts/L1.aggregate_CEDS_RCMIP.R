@@ -24,6 +24,92 @@ rcmip_emiss <- read.csv(file.path(DIRS$L0, "L0.rcmip_ceds_emiss.csv"))
 mapping <- read.csv(file.path(DIRS$MAPPING, "CEDS_Hector_mapping.csv"),
                     comment.char = "#")
 
+# Function that uses CH4 concentrations and back calculates the emissions
+# Args
+#   input_ch4: data.frame of the CH4 concentrations
+#   input_nox: data.frame of the NOX emissions
+#   input_co: data.frame of the CO emissions
+#   input_nmvoc: data.frame of the NMVOC emissions
+#   NOX_0: numeric, default set 3.877282 of the 1745 NOX emissions, may want to change to CEDS
+#   CO_0: numeric, default set to 348.5274 of the 1745 CO emissions, may want to change to CEDS
+#   NMVOC_0: numeric, default set to 60.02183 the 1745 NMVOC emissions, may want to change to CEDS
+# Returns: data.frame of emissions that would produce the [CH4] in Hector
+get_ch4_emissions <- function(input_ch4, input_nox, input_co, input_nmvoc,
+                              NOX_0 =  3.877282, CO_0 = 348.5274, NMVOC_0 = 60.02183){
+
+    # Quality check the inputs, make sure we are working with the right units and
+    # that the time series is continuous! over kill but whatever
+    assert_that(has_name(x = input_ch4, which = c("year", "variable", "value", "units")))
+    # assert_that(are_equal(unique(input_ch4$units), "pppbv CH4"))
+    assert_that(are_equal(unique(diff(input_ch4$year)), 1))
+    assert_that(has_name(x = input_nox, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_nox$units), "Tg N"))
+    assert_that(are_equal(unique(diff(input_nox$year)), 1))
+    assert_that(has_name(x = input_co, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_co$units), "Tg CO"))
+    assert_that(are_equal(unique(diff(input_co$year)), 1))
+    assert_that(has_name(x = input_nmvoc, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_nmvoc$units), "Tg NMVOC"))
+    assert_that(are_equal(unique(diff(input_nmvoc$year)), 1))
+    assert_that(are_equal(nrow(input_co), nrow(input_ch4)))
+
+    # After making sure that all the inputs match what we need extract the values.
+    ch4_conc <- input_ch4$value
+    nox_vals <- input_nox$value
+    nmvoc_vals <- input_nmvoc$value
+    co_vals <- input_co$value
+
+    # Default values from the ini files.
+    # CH4 component constants
+    M0= 731.41  		# 731.41 ppb preindustrial methane IPCC AR6 Table 7.SM.1, the CH4 forcing equations is calibrated to a M0 of 731.41 ppb
+    Tsoil=160 			# lifetime of soil sink (years)
+    Tstrat=120          # lifetime of tropospheric sink (years)
+    UC_CH4=2.78			# Tg(CH4)/ppb unit conversion between emissions and concentrations
+    CH4N=335	        # Natural CH4 emissions (Tgrams)
+
+    # OH component constants
+    TOH0=6.6			#; inital OH lifetime (years)
+    CNOX=0.0042			#; coefficent for NOX
+    CCO=-0.000105		#; coefficent for CO
+    CNMVOC=-0.000315	#; coefficent for NMVOC (non methane VOC)
+    CCH4=-0.32			#; coefficent for CH4
+
+
+    # Modify the concentrations time series to account for
+    # for the time lag.
+    ch4_conc <- c(NA, ch4_conc)[1:length(nmvoc_vals)]
+
+    # OH lifetime calculations
+    a <- CCH4 * log(ch4_conc/M0)
+    b <- CNOX*(nox_vals - NOX_0)
+    c <- CCO * (co_vals - CO_0)
+    d <- CNMVOC*(nmvoc_vals - NMVOC_0)
+    toh <- (a + b + c + d)
+    tau <- TOH0 * exp( -1 * toh )
+
+    # Calculate the change in CH4 concentrations and pad to make sure
+    # it is the correct length.
+    dch4 <- c(diff(ch4_conc), NA)
+    # Use (S5) to calculate the emissions.
+    emiss <- UC_CH4 * (dch4 + (ch4_conc/tau) + (ch4_conc/Tstrat) + (ch4_conc/Tsoil))
+
+    data.frame(year = input_ch4$year,
+               value = emiss,
+               variable = EMISSIONS_CH4(),
+               units = getunits(EMISSIONS_CH4())) %>%
+        na.omit() ->
+        out
+
+    return(out)
+
+
+}
+
+
+
+
+
+
 # 1. Main Chunk ----------------------------------------------------------------
 # One of the differences between the CEDS and RCMIP data is that CEDS lacks
 # scenario information, since we want to use CEDS data with all of the different
@@ -77,13 +163,55 @@ ceds_data %>%
     combo_emissions
 
 # Map the CEDS to Hector emission names and units
+# TODO should need to add some better notes about why this is incomplete.
 combo_emissions %>%
     inner_join(mapping, by = "ceds_variable") %>%
     mutate(value = ceds_value * cf) %>%
     select(scenario, year, value, variable = hector_variable, units = hector_units) ->
     ceds_hector_impcomplete
 
-write.csv(ceds_hector_impcomplete,
+# We need to extrapolate the early year values, but not for the CH4 and N2O
+# emissions, those are special cases.
+# TODO this is not the most robust way to handle this but we are assuming that
+# the first CEDS year is 1750.
+ceds_hector_impcomplete %>%
+    filter(!variable %in% c(EMISSIONS_N2O(), EMISSIONS_CH4())) %>%
+    filter(year == 1750)  ->
+    emissions_1750
+
+scn <- rep(x = emissions_1750$scenario, each = 5)
+yr <-  rep(1745:1749, length.out = length(scn))
+val <- rep(x = emissions_1750$value, each = 5)
+var <- rep(x = emissions_1750$variable, each = 5)
+u <- rep(x = emissions_1750$units, each = 5)
+
+data.frame(scenario = scn,
+           year = yr,
+           value = val,
+           variable = var,
+           units = u) ->
+    early_eimss
+
+# Right now the N2O and CH4 emissions are incomplete, we are working on
+# some sort of method to add in those emissions.
+rbind(early_eimss, ceds_hector_impcomplete) %>%
+    arrange(scenario, variable) ->
+    ceds_hector_ch4_n2o_incomplete
+
+# TODO
+# Need to add chunk of code that extends the CH4 and N2O emissions until 1745.
+# Extend CH4 emissions until 1745.
+# So the CEDS CH4 emissions start in 1970 and we need them to start in 1745.
+# We are able to do this inverting Hector's CH4 concentration calculations to
+# figure out what the CH4 emissions are.
+
+
+
+
+
+
+
+write.csv(ceds_hector_ch4_n2o_incomplete,
           file = file.path(DIRS$L1, "L1.incomplete_ceds_hector.csv"),
           row.names = FALSE)
 

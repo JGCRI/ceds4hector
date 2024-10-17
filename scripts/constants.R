@@ -4,6 +4,7 @@ library(assertthat)
 library(dplyr)
 library(tidyr)
 library(zoo)
+library(hector)
 
 # TODO probably use a package manager but for now this is probably good enough
 stopifnot(packageVersion("dplyr") == "1.1.4")
@@ -12,7 +13,6 @@ stopifnot(packageVersion("tidyr") == "1.3.1")
 # packages that are probably not going to be required but could be helpful during
 # the developmental stage.
 library(ggplot2)
-library(hector)
 
 # 1. Set Up Directories --------------------------------------------------------
 BASE <-  here::here()

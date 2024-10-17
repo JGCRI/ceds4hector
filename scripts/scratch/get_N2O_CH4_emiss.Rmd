@@ -1,0 +1,474 @@
+---
+title: "Extending N2O and CH4 Emissions"
+author: "Kalyn Dorheim"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true             # Enables the Table of Contents
+    toc_float:            # Configures the floating TOC
+      collapsed: false    # Whether the TOC starts collapsed
+      smooth_scroll: true # Enables smooth scrolling to sections
+---
+
+The CEDS N2O and CH4 emissions end earlier than we would like them to, in this document we 
+back calculate what the Hector emissions should be in order to reproduce the Global 
+GHG concentration data for the CMIP6 historical runs or our observations in this case. 
+
+
+
+# Set Up 
+
+## Environment 
+
+```{r, warning=FALSE, message=FALSE}
+# Packages
+library(assertthat)
+library(dplyr)
+library(ggplot2)
+library(hector)
+library(zoo)
+library(tidyr)
+
+# Relative paths 
+BASE_DIR <- here::here()
+
+# Plotting options 
+theme_set(theme_bw())
+```
+
+## Define Helper Functions  
+
+```{r}
+# Function that uses CH4 concentrations and back calculates the emissions
+# Args
+#   input_ch4: data.frame of the CH4 concentrations
+#   input_nox: data.frame of the NOX emissions
+#   input_co: data.frame of the CO emissions
+#   input_nmvoc: data.frame of the NMVOC emissions
+#   NOX_0: numeric, default set 3.877282 of the 1745 NOX emissions, may want to change to CEDS
+#   CO_0: numeric, default set to 348.5274 of the 1745 CO emissions, may want to change to CEDS
+#   NMVOC_0: numeric, default set to 60.02183 the 1745 NMVOC emissions, may want to change to CEDS
+# Returns: data.frame of emissions that would produce the [CH4] in Hector
+get_ch4_emissions <- function(input_ch4, input_nox, input_co, input_nmvoc,
+                              NOX_0 =  3.877282, CO_0 = 348.5274, NMVOC_0 = 60.02183){
+    
+    # Quality check the inputs, make sure we are working with the right units and
+    # that the time series is continuous! over kill but whatever
+    assert_that(has_name(x = input_ch4, which = c("year", "variable", "value", "units")))
+   # assert_that(are_equal(unique(input_ch4$units), "pppbv CH4"))
+    assert_that(are_equal(unique(diff(input_ch4$year)), 1))
+    assert_that(has_name(x = input_nox, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_nox$units), "Tg N"))
+    assert_that(are_equal(unique(diff(input_nox$year)), 1))
+    assert_that(has_name(x = input_co, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_co$units), "Tg CO"))
+    assert_that(are_equal(unique(diff(input_co$year)), 1))
+    assert_that(has_name(x = input_nmvoc, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_nmvoc$units), "Tg NMVOC"))
+    assert_that(are_equal(unique(diff(input_nmvoc$year)), 1))
+    assert_that(are_equal(nrow(input_co), nrow(input_ch4)))
+
+    # After making sure that all the inputs match what we need extract the values.
+    ch4_conc <- input_ch4$value
+    nox_vals <- input_nox$value
+    nmvoc_vals <- input_nmvoc$value
+    co_vals <- input_co$value
+    
+    # Default values from the ini files.
+    # CH4 component constants
+    M0= 731.41  		# 731.41 ppb preindustrial methane IPCC AR6 Table 7.SM.1, the CH4 forcing equations is calibrated to a M0 of 731.41 ppb
+    Tsoil=160 			# lifetime of soil sink (years)
+    Tstrat=120          # lifetime of tropospheric sink (years)
+    UC_CH4=2.78			# Tg(CH4)/ppb unit conversion between emissions and concentrations
+    CH4N=335	        # Natural CH4 emissions (Tgrams)
+    
+    # OH component constants
+    TOH0=6.6			#; inital OH lifetime (years)
+    CNOX=0.0042			#; coefficent for NOX
+    CCO=-0.000105		#; coefficent for CO
+    CNMVOC=-0.000315	#; coefficent for NMVOC (non methane VOC)
+    CCH4=-0.32			#; coefficent for CH4
+    
+    
+    # Modify the concentrations time series to account for
+    # for the time lag.
+    ch4_conc <- c(NA, ch4_conc)[1:length(nmvoc_vals)]
+    
+    # OH lifetime calculations
+    a <- CCH4 * log(ch4_conc/M0)
+    b <- CNOX*(nox_vals - NOX_0)
+    c <- CCO * (co_vals - CO_0)
+    d <- CNMVOC*(nmvoc_vals - NMVOC_0)
+    toh <- (a + b + c + d)
+    tau <- TOH0 * exp( -1 * toh )
+    
+    # Calculate the change in CH4 concentrations and pad to make sure
+    # it is the correct length.
+    dch4 <- c(diff(ch4_conc), NA)
+    # Use (S5) to calculate the emissions.
+    emiss <- UC_CH4 * (dch4 + (ch4_conc/tau) + (ch4_conc/Tstrat) + (ch4_conc/Tsoil))
+    
+    data.frame(year = input_ch4$year,
+               value = emiss,
+               variable = EMISSIONS_CH4(),
+               units = getunits(EMISSIONS_CH4())) %>%
+        na.omit() ->
+        out
+    
+    return(out)
+    
+    
+}
+
+
+# Back calculate total N2O emissions for Hector based on a time series of N2O concentrations
+# Args
+#   input_df: data.frame of the N2O concentrations
+# Return: data.frame of the N2O emissions, in the same format as Hector input/output
+get_hector_n2o_emissions <- function(input_df){
+    
+    # Quality check the inputs, make sure we are working with the right units and
+    # that the time series is continuous!
+    assert_that(has_name(x = input_df, which = c("year", "variable", "value", "units")))
+    assert_that(are_equal(unique(input_df$units), "ppbv N2O"))
+    assert_that(are_equal(unique(diff(input_df$year)), 1))
+    
+    
+    # Default Hector values defined in Hector ini files.
+    N0=273.87
+    UC_N2O=4.8
+    TN2O0=132
+    
+    # Extract the concentrations and years data.
+    yrs <- input_df$year
+    n <- length(yrs)
+    conc_vals <- input_df$value
+    
+    
+    # Determine the N2O lifetime using (S2) from Dorheim et al. 2024, there is
+    # a time lag so padd the front with the original lifetime.
+    tau_n2o <- TN2O0 * (conc_vals/N0) ^ (-0.05)
+    tau_n2o <- c(TN2O0, tau_n2o)[1:n]
+    
+    # Calculate the change [N2O] over time
+    d_co2 <- diff(c(conc_vals))[1:n]
+    
+    # Calculate the emissions based on (S1) from Dorheim et al. 2024
+    emiss <- 4.8 * (d_co2 + conc_vals/tau_n2o)
+    
+    
+    data.frame(year = yrs,
+               value = emiss,
+               variable = EMISSIONS_N2O(),
+               units = getunits(EMISSIONS_N2O())) %>%
+        na.omit ->
+        out
+    
+    return(out)
+}
+```
+
+##  Observations  
+
+For now we are going with the Meinhausin et al 2017 as our obs but I think that this 
+could work for other concentration time series as well. 
+
+```{r}
+# Import the data and prep for formatting 
+file.path(BASE_DIR, "data", "raw-data", "Supplementary_Table_UoM_GHGConcentrations-1-1-0_annualmeans_v23March2017.csv") %>% 
+    read.csv(skip = 23, header = FALSE) %>% 
+    na.omit() -> 
+    conc_obs
+
+colnames(conc_obs) <- c("year", "CO2", "CH4", "N2O", 
+                        "CFC-12a", "HFC-134a", "CFC-11", "CFC-12")
+
+# Since the data set is missing the data starting in 1745, let's use 
+# the preindustrial conc values used in Hector.  
+ini <- system.file(package = "hector", "input", "hector_ssp245.ini")
+hc  <- newcore(ini)
+N2O_0 <- fetchvars(hc, NA, PREINDUSTRIAL_N2O())[["value"]]
+CH4_0 <- fetchvars(hc, NA, PREINDUSTRIAL_CH4())[["value"]]
+data.frame(year = 1745, CH4 = CH4_0, N2O = N2O_0) %>% 
+    mutate(year = as.integer(year), 
+           CH4 = as.double(CH4), 
+           N2O = as.double(N2O)) -> 
+    init
+
+# We are also missing data for a few years add them as NAs into the
+# obs data frame. 
+expected_years <- 1746:2015
+missing_yrs <- setdiff(expected_years, unique(conc_obs$year))
+missing_df <- data.frame(year = missing_yrs, 
+                         CH4 = NA, 
+                         N2O = NA) %>% 
+    mutate(CH4 = as.numeric(CH4), 
+           N2O = as.numeric(N2O))
+
+# Add the preindustrial values to the observations data frame. Now 
+# we will have the data frame with the NAs. 
+conc_obs %>% 
+    select(year, CH4, N2O)  %>% 
+    mutate(CH4 = gsub(x = CH4, replacement = "", pattern = ","), 
+           N2O = gsub(x = N2O, replacement = "", pattern = ,"")) %>% 
+    mutate(year = as.integer(year), 
+           CH4 = as.numeric(CH4), 
+           N2O = as.numeric(N2O)) %>% 
+    bind_rows(init) %>% 
+    bind_rows(missing_df) %>% 
+    arrange(year) -> 
+    obs_df_wNAs
+
+CH4_noNA <- na.approx(obs_df_wNAs$CH4, na.rm = FALSE)
+N2O_noNA <- na.approx(obs_df_wNAs$N2O, na.rm = FALSE)
+
+data.frame(year = obs_df_wNAs$year, 
+           CH4 = CH4_noNA, 
+           N2O = N2O_noNA) %>% 
+    na.omit %>% 
+    mutate(source = "obs") -> 
+    full_obs
+```
+
+
+```{r, echo = FALSE, eval=FALSE}
+# This is not run but was a QAQC check 
+system.file(package = "hector", "input/tables/ssp245_emiss-constraints_rf.csv") %>%  
+    read.csv(comment.char = ";") %>%
+    select(year = Date, 
+           CH4 = CH4_constrain, 
+           N2O = N2O_constrain) %>% 
+    mutate(source = "rcmip") %>% 
+    filter(year %in% full_obs$year) -> 
+    rcmip
+
+to_plot <- bind_rows(full_obs, rcmip)
+
+to_plot %>% 
+    ggplot(aes(year, N2O, color = source)) + 
+    geom_line()
+```
+
+
+
+```{r}
+# Final formatting the observations so that are in the correct format for our helper functions. 
+names(full_obs) <- c("year", CONCENTRATIONS_CH4(), CONCENTRATIONS_N2O(), "source")
+
+# Change from wide to long 
+full_obs %>% 
+    pivot_longer(cols = c("CH4_concentration", "N2O_concentration"),
+                 names_to = "variable") %>% 
+    select(year, variable, value) %>% 
+    mutate(units = if_else(variable == CONCENTRATIONS_CH4(), 
+                          getunits(CH4_CONSTRAIN()), 
+                          getunits(N2O_CONSTRAIN()))) ->
+    conc_obs
+```
+
+Import the CEDS emissions. 
+```{r}
+file.path(BASE_DIR, "data", "L1", "L1.incomplete_ceds_hector.csv") %>% 
+    read.csv %>% 
+    filter(scenario == "historical") %>% 
+    filter(year %in% conc_obs$year) %>% 
+    filter(variable %in% c(EMISSIONS_CH4(), EMISSIONS_N2O(), 
+                           EMISSIONS_CO(), EMISSIONS_NMVOC(), EMISSIONS_NOX())) -> 
+    ceds_emissions
+```
+
+Import the Hector emissions. 
+
+```{r}
+# Note that these emissions do not include the natural emissions. 
+vars <- c(EMISSIONS_CH4(), EMISSIONS_N2O(), 
+                           EMISSIONS_CO(), EMISSIONS_NMVOC(), EMISSIONS_NOX())
+system.file(package = "hector", "input/tables/ssp245_emiss-constraints_rf.csv") %>% 
+    read.csv(comment.char = ";") %>% 
+    select(c(Date, vars)) %>% 
+    rename(year = Date) %>% 
+    pivot_longer(-year, names_to = "variable") %>% 
+    mutate(units = getunits(variable)) %>% 
+    filter(year %in% conc_obs$year) -> 
+    hector_emissions
+```
+
+
+
+# Calculate Emissions 
+
+## N2O Emissions
+
+The N2O emissions 
+```{r}
+conc_obs %>%
+    filter(variable == CONCENTRATIONS_N2O()) -> 
+    n2o_conc
+
+my_n2o_emissions <- get_hector_n2o_emissions(n2o_conc)
+```
+
+
+Compare the N2O emissions used by Hector, back calculated, and then the default Hector ones. 
+
+```{r}
+my_n2o_emissions$source <- "back calculated"
+my_n2o_emissions$value <- my_n2o_emissions$value - 9.72 # remove the assumed natural emissions 
+
+hector_emissions %>%  
+    filter(variable == EMISSIONS_N2O()) %>% 
+    mutate(source = "hector default") -> 
+    hector_n2o_emiss
+
+ceds_emissions %>% 
+    filter(variable == EMISSIONS_N2O()) %>% 
+    mutate(source = "ceds") -> 
+    ceds_n2o_emiss
+
+# bind_rows(my_n2o_emissions, hector_n2o_emiss, ceds_n2o_emiss) %>% 
+#     ggplot(aes(year, value, color = source)) +
+#     geom_line() + 
+#     labs(title = "N2O emissions", y = getunits(EMISSIONS_N2O()), x = "Year") 
+```
+
+Note that the N2O emissions here do not include the natural N2O emissions which we have set to 9.72 Tg a year. I think it is interesting that the back calculated emissions and CEDS emission are consistent with one another I also think that we could do some sort of interpolation between the back calculated and the ceds emissions. 
+
+
+## CH4 Emissions
+
+
+It is important to note that to do this back calculation of the methane emissions I did turn the permafrost run off. I also wanted to check to see how important it is use to the CEDS emissions for the non methane emisisons that contribute to methane concentrations. 
+
+
+CH4 emissions using Hector emissions. 
+
+```{r}
+conc_obs %>%
+    filter(variable == CONCENTRATIONS_CH4()) -> 
+    ch4_conc
+
+hector_emissions %>% 
+    filter(variable == EMISSIONS_NMVOC()) -> 
+    hector_nmvoc
+
+hector_emissions %>% 
+    filter(variable == EMISSIONS_CO()) -> 
+    hector_co
+
+hector_emissions %>%  
+    filter(variable == EMISSIONS_NOX()) -> 
+    hector_nox
+ 
+
+get_ch4_emissions(input_ch4 = ch4_conc, 
+                  input_nox = hector_nox, 
+                  input_co = hector_co, 
+                  input_nmvoc = hector_nmvoc) %>% 
+    mutate(source = "default hector") -> 
+    my_ch4_hector
+```
+
+
+CH4 emissions using CEDS emissions. 
+
+```{r}
+ceds_emissions %>% 
+    filter(variable == EMISSIONS_NMVOC()) -> 
+    ceds_NMVOC 
+
+ceds_emissions %>% 
+    filter(variable == EMISSIONS_CO()) -> 
+    ceds_co
+
+ceds_emissions %>% 
+    filter(variable == EMISSIONS_NOX()) -> 
+    ceds_nox
+
+# # Checking to see how much the initial values matter, using the CEDS inital values 
+# is probably the best call for consistency sake but why not. 
+# get_ch4_emissions(input_ch4 = ch4_conc, 
+#                   input_nox = ceds_nox, 
+#                   input_co = ceds_co, 
+#                   input_nmvoc = ceds_NMVOC) %>% 
+#     mutate(inital = "hector") -> 
+#     out1
+
+# Extract the initial CEDS values. 
+NMVOC_0 <- filter(ceds_NMVOC, year == 1745)[["value"]]
+NOX_0 <- filter(ceds_nox, year == 1745)[["value"]]
+CO_0 <- filter(ceds_co, year == 1745)[["value"]]
+
+# The natural emissions we are assumed to be constant over the course of the Hector run 
+# they need to be removed from the back calculated values. 
+CH4N <- 335
+
+get_ch4_emissions(input_ch4 = ch4_conc, 
+                  input_nox = ceds_nox, 
+                  input_co = ceds_co, 
+                  input_nmvoc = ceds_NMVOC, 
+                  NOX_0, CO_0, NMVOC_0) %>% 
+    mutate(source = "back calculated") %>% 
+    mutate(value = value - CH4N) -> 
+    my_ch4_ceds
+    
+# bind_rows(out1, out2) %>%
+#     ggplot(aes(year, value, color = inital)) +
+#     geom_line()
+```
+
+
+Comparison of the CH4 emissions that are calculated using the CEDS vs Hector default emissions for the non methane emission species. THere are smo
+```{r}
+my_ch4_ceds %>%
+    rbind(my_ch4_hector) %>%  
+    ggplot(aes(year, value, color = source)) + 
+    geom_line() + 
+    labs(title = "Comparison of the NMVOC, NOx, and CO emissions used in the CH4 emission calculation")
+```
+
+
+Now let's do a comparison of the different CH4 emissions. 
+
+```{r}
+ceds_emissions %>% 
+    filter(variable == EMISSIONS_CH4()) %>% 
+    mutate(source = "ceds") -> 
+    ceds_ch4
+
+hector_emissions %>% 
+    filter(variable == EMISSIONS_CH4()) %>% 
+    filter(year %in% my_ch4_ceds$year) %>% 
+    mutate(source = "hector default") -> 
+    hector_ch4_emiss
+
+# bind_rows(my_ch4_ceds, hector_ch4_emiss, ceds_ch4) %>% 
+#     ggplot(aes(year, value, color = source)) +
+#     geom_line(linewidth = 1) +
+#     labs(title = "CH4 emissions", y = getunits(EMISSIONS_CH4()), x = "Year")
+```
+
+This acutally looks like a pretty smooth transition from the back calculated to the 
+
+
+
+# Comparisons 
+
+
+```{r}
+bind_rows(my_n2o_emissions, hector_n2o_emiss, ceds_n2o_emiss) %>%
+    ggplot(aes(year, value, color = source)) +
+    geom_line() +
+    labs(title = "N2O emissions", y = getunits(EMISSIONS_N2O()), x = "Year")
+```
+
+Okay so the back calculated consistent with the CEDS data, more so than the RCMIP emissions used by hector by default. Which is surprising sort of... but there is enough of a gap that I think that there needs to probably be some sort of interpolations, I am not sure if the jumps look that good though... 
+
+```{r}
+bind_rows(my_ch4_ceds, hector_ch4_emiss, ceds_ch4) %>% 
+    ggplot(aes(year, value, color = source)) +
+    geom_line(linewidth = 1) +
+    labs(title = "CH4 emissions", y = getunits(EMISSIONS_CH4()), x = "Year")
+```
+
+
+
