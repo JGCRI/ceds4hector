@@ -9,6 +9,10 @@ source(here::here("scripts", "constants.R"))
 rcmip_emiss <- read.csv(file.path(DIRS$L1, "L1.hector_rcmip_emiss.csv"))
 ceds_emiss <- read.csv(file.path(DIRS$L1, "L1.incomplete_ceds_hector.csv"))
 
+# Read in the ini template.
+template_ini <- readLines(file.path(DIRS$DATA, "hector_TEMPLATE.ini"))
+
+
 # Write a hector input table Save the hector csv files into the proper hector format
 # Args
 #   x: data table containing Hector input values
@@ -63,6 +67,45 @@ write_hector_csv <- function(x, required=NULL, write_to, info_source = "hector_c
 
 }
 
+
+
+
+# Replace the emissions csv file strings with the path to the new csv table
+# Args
+#   ini: lines of a Hector ini file.
+#   replacement_path: the file path to the hector input csv table.
+#   run_name: character name of run name.
+#   pattern: regular expression pattern of the csv paths to replace with `replacement_path`
+#            the default is set to replace all emission and concentration constraints.
+# Returns: lines of a Hector ini file.
+replace_csv_string <- function(ini, replacement_path, run_name, pattern = "=csv:.*TEMPLATE.csv"){
+
+    # Make sure the pattern exists.
+    assert_that(any(grepl(pattern = pattern, x = ini)))
+
+    # Replace the path in the ini to the template csv file with a path to the input table.
+    new_ini <- gsub(pattern = pattern, replacement = paste0('=csv:', replacement_path), x = ini)
+    new_ini <- gsub(pattern = 'TEMPLATE', replacement = run_name, x = new_ini)
+
+    return(new_ini)
+}
+
+# Write a ini file for a particular csv table
+# Args
+#   path: str pathway to the csv table of emisisons & inputs
+# Returns: str path where the ini file is written out to
+write_hector_ini <- function(path){
+
+    name <- gsub(x = basename(path), pattern = "_emiss.csv", replacement = "")
+    csv <- file.path(".", basename(DIRS$TABLES), basename(path))
+
+    new_ini <- replace_csv_string(ini = template_ini, replacement_path = csv, run_name = name)
+
+    out_file <- file.path(DIRS$TABLES, "..", paste0(name, ".ini"))
+    writeLines(new_ini, con = out_file)
+
+    return(out_file)
+}
 # 1. Main Chunk ----------------------------------------------------------------
 # Extend the rcmip emissions until 1745.
 split(rcmip_emiss, rcmip_emiss$scenario) %>%
@@ -82,16 +125,18 @@ rcmip_emiss %>%
     left_join(ceds_meta_df, by = join_by(scenario, year, variable)) %>%
     filter(is.na(drop)) %>%
     select(-drop) %>%
-    rbind(ceds_emiss) %>%
-    na.omit ->
+    rbind(ceds_emiss) ->
     hector_emissions
 
-# Write the tables out the
+# Write the tables out!
 hector_emissions %>%
     split(f = .$scenario) %>%
-    lapply(FUN = write_hector_csv, write_to = DIRS$TABLES)
+    lapply(FUN = write_hector_csv, write_to = DIRS$TABLES) ->
+    tables
 
-# TODO then we need to figure out which other variable are missing so that we can write them in a different
-# place so that they are all able to run
+# Write the ini files out!
+tables %>%
+    lapply(FUN = write_hector_ini) ->
+    inis
 
 

@@ -8,13 +8,14 @@
 #       need to copy over.
 # B) Probably need to flesh out the RCMIP to Hector portion of the code so that
 #       the full scenarios are copied over.
-# C) Need to change the list of scenarios that are being processed by this script.
 # UP NEXT
 
 # 0. Set Up -------------------------------------------------------------------
 # Load the project constants and basic functions
 source(here::here("scripts", "constants.R"))
 
+# TODO figure out if these two helper function are redundant of if they do
+# different things...
 
 # Use linear interpolation to fill in missing data
 # Args
@@ -53,19 +54,63 @@ my_replace_na_fxn <- function(d){
 
 }
 
+# Helper function that will fill in emission emissions
+# Args
+#   d: data.frame, long format of Hector emissions, year/variable/value/unit/scenario
+#   expected_yrs: vector, of the years of data that need the data set to have
+# Returns: data.frame, long format of Hector emissions, year/variable/value/unit/scenario for
+# all the years defined in the expected_yrs without any NAs.
+fill_in_missing_emiss <- function(d, expected_yrs = 1800:2500){
+
+    # Make sure that we are only working with a single scenario
+    scn <- unique(d$scenario)
+
+    # Make sure that the length is 1
+    assert_that(length(scn) == 1)
+
+    # Change the orientation of the data from wide to long, if one of the variables
+    # has all the required years of data this will force NAs into the missing
+    # information for the other variables. If not then this function will need
+    # to be modified to add in those NAs before interpolation. Errors will be
+    # triggered if this is necessary.
+    d %>%
+        select(year, value, variable) %>%
+        tidyr::spread(variable, value) %>%
+        mutate(year = as.integer(year)) ->
+        wide_data
+
+    missing_yrs <- setdiff(expected_yrs, wide_data$year)
+    if(length(missing_yrs) > 0){
+        stop("TODO: add code to add the missing required years")
+    }
+
+    if(sum(is.na(wide_data)) == 0){
+        warning("no NAs to detected, nothing to be interpolated")
+    }
+
+    wide_data %>%
+        mutate(across(where(is.numeric), ~na.approx(.x, wide_data$year, na.rm = FALSE))) %>%
+        pivot_longer(-year, names_to = "variable") %>%
+        mutate(units = getunits(variable)) %>%
+        arrange(variable, year) %>%
+        mutate(scenario = scn) ->
+        out
+
+    return(out)
+
+}
 
 # 1. Main Chunk ----------------------------------------------------------------
 # Load the RCMIP emission files
 rcmip_file_emiss <- list.files(path = DIRS$DATA, pattern = "rcmip-emissions-annual-means-v5-1-0.csv",
-                         full.names = TRUE, recursive = TRUE)
+                               full.names = TRUE, recursive = TRUE)
 assert_that(file.exists(rcmip_file_emiss), msg = "Missing RCMIP emissions file see set up instructions!")
 
 rcmip_file_rf <- list.files(path = DIRS$DATA, pattern = "rcmip-radiative-forcing-annual-means-v5-1-0.csv",
-                               full.names = TRUE, recursive = TRUE)
+                            full.names = TRUE, recursive = TRUE)
 
 
-# For now let's limit to a handful of scenarios
-scenarios <- c("ssp119", "ssp245", "ssp585", "historical")
+scenarios <- c("historical", "ssp119", "ssp126", "ssp245", "ssp370", "ssp434", "ssp460", "ssp534-over", "ssp585")
 
 read.csv(rcmip_file_emiss) %>%
     rbind(read.csv(rcmip_file_rf)) %>%
@@ -119,10 +164,22 @@ hector_rcmip_nonceds_emiss_some_neg %>%
     hector_rcmip_nonceds_emiss_cc_emiss
 
 
- # Add the processed co2 emissions to the emissions df.
+# Add the processed co2 emissions to the emissions df.
 hector_rcmip_nonceds_emiss_some_neg %>%
     filter(!variable %in% hector_rcmip_nonceds_emiss_cc_emiss$variable) %>%
     rbind(hector_rcmip_nonceds_emiss_cc_emiss) ->
+    hector_rcmip_nonceds_emiss_df1
+
+
+# The non historical emissions need to have the information be
+# interpolated, NA values will throw errors, this is more of
+# a problem in the future scenarios.
+hector_rcmip_nonceds_emiss_df1 %>%
+    filter(scenario != "historical") %>%
+    split(interaction(.$scenario)) %>%
+    lapply(FUN = fill_in_missing_emiss, expected_yrs = 1950:2500) %>%
+    bind_rows %>%
+    bind_rows(filter(hector_rcmip_nonceds_emiss_df1, scenario == "historical")) ->
     hector_rcmip_nonceds_emiss_df1
 
 # L1 is where all the emissions in Hector units are saved.
