@@ -11,6 +11,7 @@
 #       the future scenario parts since those emissions will be passed from
 #       GCAM but there will still be some emissions that will have to be set
 #       to default for the future period if they are not produced by GCAM.
+# The remaining TODOs are related to potential areas where code could be automated.
 
 # 0. Set Up --------------------------------------------------------------------
 # Load the project constants and basic functions
@@ -19,6 +20,7 @@ source(here::here("scripts", "constants.R"))
 # Read in data!
 ceds_emiss <- read.csv(file.path(DIRS$L0, "L0.ceds_emiss.csv"))
 rcmip_emiss <- read.csv(file.path(DIRS$L0, "L0.rcmip_ceds_emiss.csv"))
+obs_conc <-  read.csv(file.path(DIRS$L0, "L0.conc_obs.csv"))
 
 # Load mapping file
 mapping <- read.csv(file.path(DIRS$MAPPING, "CEDS_Hector_mapping.csv"),
@@ -68,11 +70,11 @@ get_ch4_emissions <- function(input_ch4, input_nox, input_co, input_nmvoc,
     CH4N=335	        # Natural CH4 emissions (Tgrams)
 
     # OH component constants
-    TOH0=6.6			#; inital OH lifetime (years)
-    CNOX=0.0042			#; coefficent for NOX
-    CCO=-0.000105		#; coefficent for CO
-    CNMVOC=-0.000315	#; coefficent for NMVOC (non methane VOC)
-    CCH4=-0.32			#; coefficent for CH4
+    TOH0=6.6			# inital OH lifetime (years)
+    CNOX=0.0042			# coefficent for NOX
+    CCO=-0.000105		# coefficent for CO
+    CNMVOC=-0.000315	# coefficent for NMVOC (non methane VOC)
+    CCH4=-0.32			# coefficent for CH4
 
 
     # Modify the concentrations time series to account for
@@ -92,6 +94,7 @@ get_ch4_emissions <- function(input_ch4, input_nox, input_co, input_nmvoc,
     dch4 <- c(diff(ch4_conc), NA)
     # Use (S5) to calculate the emissions.
     emiss <- UC_CH4 * (dch4 + (ch4_conc/tau) + (ch4_conc/Tstrat) + (ch4_conc/Tsoil))
+    emiss <- emiss - CH4N # remove the natural emissions
 
     data.frame(year = input_ch4$year,
                value = emiss,
@@ -102,13 +105,7 @@ get_ch4_emissions <- function(input_ch4, input_nox, input_co, input_nmvoc,
 
     return(out)
 
-
 }
-
-
-
-
-
 
 # 1. Main Chunk ----------------------------------------------------------------
 # One of the differences between the CEDS and RCMIP data is that CEDS lacks
@@ -203,14 +200,52 @@ rbind(early_eimss, ceds_hector_impcomplete) %>%
 # Extend CH4 emissions until 1745.
 # So the CEDS CH4 emissions start in 1970 and we need them to start in 1745.
 # We are able to do this inverting Hector's CH4 concentration calculations to
-# figure out what the CH4 emissions are.
+# figure out what the CH4 emissions are and will use the helper function
+# defined above.
+ceds_hector_ch4_n2o_incomplete %>%
+    filter(variable == EMISSIONS_CH4()) %>%
+    pull(year) %>%
+    min ->
+    ch4_start_yr
 
+# Extract the CH4 concentrations from the observations.
+ch4_conc <- filter(obs_conc, (variable == CONCENTRATIONS_CH4() & year < ch4_start_yr))
 
+# Extract the non-methane emissions that are required for this back calculation.
+scn <- "historical"
+nmvoc_emiss <- filter(ceds_hector_ch4_n2o_incomplete, (variable == EMISSIONS_NMVOC() & scenario == scn & year < ch4_start_yr))
+co_emiss <- filter(ceds_hector_ch4_n2o_incomplete, (variable == EMISSIONS_CO() & scenario == scn & year < ch4_start_yr))
+nox_emiss <- filter(ceds_hector_ch4_n2o_incomplete, (variable == EMISSIONS_NOX() & scenario == scn & year < ch4_start_yr))
 
+# Save a copy of the initial emissions.
+NOX_0 <- nox_emiss$value[[1]]
+CO_0 <- co_emiss$value[[1]]
+NMVOC_0 <- nmvoc_emiss$value[[1]]
 
+# Calculate the required emissions
+get_ch4_emissions(input_ch4 = ch4_conc, input_nox = nox_emiss,
+                  input_co = co_emiss, input_nmvoc = nmvoc_emiss,
+                  NOX_0 = NOX_0, CO_0 = CO_0, NMVOC_0 = NMVOC_0) ->
+    ch4_emissions
 
+ch4_emissions %>%
+    filter(year == min(year)) %>%
+    mutate(year = 1745) %>%
+    rbind(ch4_emissions) ->
+    ch4_emissions
 
+# Repeat the emissions data table for X number of scenarios
+scns <- unique(ceds_hector_ch4_n2o_incomplete$scenario)
+early_ch4_emissions_scns <- do.call(rbind, replicate(length(scns), ch4_emissions, simplify = FALSE))
+early_ch4_emissions_scns$scenario <- rep(scns, each = nrow(ch4_emissions))
 
+# Add the early emissions to the other ceds emissions.
+ceds_hector_ch4_n2o_incomplete %>%
+    bind_rows(early_ch4_emissions_scns) %>%
+    arrange(scenario, variable, year) ->
+    ceds_hector_n2o_incomplete
+
+# TODO need to figure out what do to about the n2o emissions.
 write.csv(ceds_hector_ch4_n2o_incomplete,
           file = file.path(DIRS$L1, "L1.incomplete_ceds_hector.csv"),
           row.names = FALSE)

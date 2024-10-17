@@ -1,6 +1,7 @@
 # Read in R packages and define project constants
 # 0. Load packages -------------------------------------------------------------
 library(assertthat)
+library(data.table)
 library(dplyr)
 library(tidyr)
 library(zoo)
@@ -20,7 +21,8 @@ DIRS <- list(DATA = file.path(BASE, "data"),
              RAW_DATA = file.path(BASE, "data", "raw-data"),
              MAPPING = file.path(BASE, "data", "mapping"),
              L0 = file.path(BASE, "data", "L0"),
-             L1 = file.path(BASE, "data", "L1"))
+             L1 = file.path(BASE, "data", "L1"),
+             TABLES = file.path(BASE, "inputs", "tables"))
 
 dir.create(DIRS$L0, showWarnings = FALSE)
 dir.create(DIRS$L1, showWarnings = FALSE)
@@ -33,5 +35,48 @@ CEDS_EMISS <- c("BC", "CH4", "CO", "CO2", "N2O", "NH3", "NMVOC", "NOx", "OC", "S
 
 # This is the final year of the the CEDS data!
 CEDS_FINAL_YEAR <- 2022
+
+
+
+# 3. Common Functions ----------------------------------------------------------
+
+# TODO idk could generalize to make more useful
+# Extend the emissions until 1745
+# Args
+#   x: data.frame emissions that start in 1750
+# Return: data.frame that has extended the emissions until 1745
+extend_to_1745 <- function(x){
+
+    new_start_yr <- 1745
+    to_copy <- filter(x, year == 1750)
+
+    scn <- rep(x = to_copy$scenario, each = 5)
+    yr <-  rep(1745:1749, length.out = length(scn))
+    val <- rep(x = to_copy$value, each = 5)
+    var <- rep(x = to_copy$variable, each = 5)
+    u <- rep(x = to_copy$units, each = 5)
+
+    data.frame(scenario = scn,
+               year = yr,
+               value = val,
+               variable = var,
+               units = u) ->
+        early_eimss
+
+    rbind(x, early_eimss) %>%
+        arrange(scenario, variable, year) ->
+        out
+
+    return(out)
+
+}
+
+
+
+
+
+
+
+
 
 

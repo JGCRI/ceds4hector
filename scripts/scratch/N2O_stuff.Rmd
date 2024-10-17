@@ -1,5 +1,5 @@
 ---
-title: "Back Calucalting N2O "
+title: "Extending N2O and CH4 Emissions"
 author: "Kalyn Dorheim"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
@@ -10,4 +10,18 @@ output:
       smooth_scroll: true # Enables smooth scrolling to sections
 ---
 
-Here we are using N2O concentrations
+The CEDS N2O and CH4 emissions end earlier than we would like them to, in this document we 
+back calculate what the Hector emissions should be in order to reproduce the Global 
+GHG concentration data for the CMIP6 historical runs or our observations in this case. 
+
+
+```{r}
+# Here we will want to do the set up for the script, where we read in the obs from meinahours 
+# will need to do some interpolation and extraploxation booooo, but then we we can convert teh obs to emission ts and 
+# compare that with the rcmip historcal emissiosn, ceds emissiosn and these new ones I think then we 
+# send those to rachel and steve and see what they think about doing some sort of smoothing to get the other ermissions to match up
+# up with the ceds inputs BLEH i think that this coudl acltually take a while.... 
+
+
+
+```

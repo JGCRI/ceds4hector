@@ -10,10 +10,6 @@
 #       the full scenarios are copied over.
 # C) Need to change the list of scenarios that are being processed by this script.
 # UP NEXT
-#       need to grab the other required inputs aka SV and albedo so then can set
-#       up the full tables... actually what might be helpful is to do a comparison
-#       between the variables in the
-
 
 # 0. Set Up -------------------------------------------------------------------
 # Load the project constants and basic functions
@@ -60,16 +56,22 @@ my_replace_na_fxn <- function(d){
 
 # 1. Main Chunk ----------------------------------------------------------------
 # Load the RCMIP emission files
-rcmip_file <- list.files(path = DIRS$DATA, pattern = "rcmip-emissions-annual-means-v5-1-0.csv",
+rcmip_file_emiss <- list.files(path = DIRS$DATA, pattern = "rcmip-emissions-annual-means-v5-1-0.csv",
                          full.names = TRUE, recursive = TRUE)
-assert_that(file.exists(rcmip_file), msg = "Missing RCMIP emissions file see set up instructions!")
+assert_that(file.exists(rcmip_file_emiss), msg = "Missing RCMIP emissions file see set up instructions!")
+
+rcmip_file_rf <- list.files(path = DIRS$DATA, pattern = "rcmip-radiative-forcing-annual-means-v5-1-0.csv",
+                               full.names = TRUE, recursive = TRUE)
+
 
 # For now let's limit to a handful of scenarios
 scenarios <- c("ssp119", "ssp245", "ssp585", "historical")
 
-read.csv(rcmip_file) %>%
+read.csv(rcmip_file_emiss) %>%
+    rbind(read.csv(rcmip_file_rf)) %>%
     filter(Scenario %in% scenarios) ->
     raw_rcmip_emissions
+
 
 # 1A. All RCMIP to Hector  -----------------------------------------------------
 # Start out by converting all RCMIP emissions to Hector inputs, since we will
