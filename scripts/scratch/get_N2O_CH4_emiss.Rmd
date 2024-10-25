@@ -464,6 +464,16 @@ bind_rows(my_n2o_emissions, hector_n2o_emiss, ceds_n2o_emiss) %>%
 Okay so the back calculated consistent with the CEDS data, more so than the RCMIP emissions used by hector by default. Which is surprising sort of... but there is enough of a gap that I think that there needs to probably be some sort of interpolations, I am not sure if the jumps look that good though... 
 
 ```{r}
+bind_rows(my_ch4_ceds, ceds_ch4) %>% 
+    ggplot(aes(year, value, color = source)) +
+    geom_line(linewidth = 1) +
+    labs(title = "CH4 emissions", y = getunits(EMISSIONS_CH4()), x = "Year")
+```
+
+
+
+
+```{r}
 bind_rows(my_ch4_ceds, hector_ch4_emiss, ceds_ch4) %>% 
     ggplot(aes(year, value, color = source)) +
     geom_line(linewidth = 1) +

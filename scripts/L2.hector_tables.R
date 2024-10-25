@@ -7,7 +7,7 @@ source(here::here("scripts", "constants.R"))
 
 # Load the data! Right now everything is in the hector units.
 rcmip_emiss <- read.csv(file.path(DIRS$L1, "L1.hector_rcmip_emiss.csv"))
-ceds_emiss <- read.csv(file.path(DIRS$L1, "L1.incomplete_ceds_hector.csv"))
+ceds_emiss <- read.csv(file.path(DIRS$L1, "L1.ceds_hector.csv"))
 
 # Read in the ini template.
 template_ini <- readLines(file.path(DIRS$DATA, "hector_TEMPLATE.ini"))
@@ -68,8 +68,6 @@ write_hector_csv <- function(x, required=NULL, write_to, info_source = "hector_c
 }
 
 
-
-
 # Replace the emissions csv file strings with the path to the new csv table
 # Args
 #   ini: lines of a Hector ini file.
@@ -106,12 +104,9 @@ write_hector_ini <- function(path){
 
     return(out_file)
 }
+
+
 # 1. Main Chunk ----------------------------------------------------------------
-# Extend the rcmip emissions until 1745.
-split(rcmip_emiss, rcmip_emiss$scenario) %>%
-    lapply(FUN = extend_to_1745) %>%
-    bind_rows ->
-    rcmip_emiss
 
 # Replace the default emissions with the ceds emissions.
 ceds_emiss %>%
@@ -125,11 +120,14 @@ rcmip_emiss %>%
     left_join(ceds_meta_df, by = join_by(scenario, year, variable)) %>%
     filter(is.na(drop)) %>%
     select(-drop) %>%
-    rbind(ceds_emiss) ->
+    rbind(ceds_emiss) %>%
+    mutate(scenario = "historical") %>%
+    filter(year <= 2022) ->
     hector_emissions
 
 # Write the tables out!
 hector_emissions %>%
+    distinct() %>%
     split(f = .$scenario) %>%
     lapply(FUN = write_hector_csv, write_to = DIRS$TABLES) ->
     tables
@@ -138,5 +136,3 @@ hector_emissions %>%
 tables %>%
     lapply(FUN = write_hector_ini) ->
     inis
-
-

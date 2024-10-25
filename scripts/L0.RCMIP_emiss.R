@@ -6,9 +6,7 @@
 # A) A better CEDS-RCMIP mapping might be better but would take more time for
 #       now the mapping file only includes the emissions we know that we
 #       need to copy over.
-# B) Probably need to flesh out the RCMIP to Hector portion of the code so that
-#       the full scenarios are copied over.
-# UP NEXT
+# B) Consider a better way to deal with the recent years data
 
 # 0. Set Up -------------------------------------------------------------------
 # Load the project constants and basic functions
@@ -109,12 +107,9 @@ assert_that(file.exists(rcmip_file_emiss), msg = "Missing RCMIP emissions file s
 rcmip_file_rf <- list.files(path = DIRS$DATA, pattern = "rcmip-radiative-forcing-annual-means-v5-1-0.csv",
                             full.names = TRUE, recursive = TRUE)
 
-
-scenarios <- c("historical", "ssp119", "ssp126", "ssp245", "ssp370", "ssp434", "ssp460", "ssp534-over", "ssp585")
-
 read.csv(rcmip_file_emiss) %>%
     rbind(read.csv(rcmip_file_rf)) %>%
-    filter(Scenario %in% scenarios) ->
+    filter(Scenario == "ssp245") ->
     raw_rcmip_emissions
 
 
@@ -182,6 +177,13 @@ hector_rcmip_nonceds_emiss_df1 %>%
     bind_rows(filter(hector_rcmip_nonceds_emiss_df1, scenario == "historical")) ->
     hector_rcmip_nonceds_emiss_df1
 
+# Extend the rcmip emissions until 1745.
+split(hector_rcmip_nonceds_emiss_df1,
+      hector_rcmip_nonceds_emiss_df1$scenario) %>%
+    lapply(FUN = extend_to_1745) %>%
+    bind_rows ->
+    hector_rcmip_nonceds_emiss_df1
+
 # L1 is where all the emissions in Hector units are saved.
 write.csv(hector_rcmip_nonceds_emiss_df1,
           file = file.path(DIRS$L1, "L1.hector_rcmip_emiss.csv"), row.names = FALSE)
@@ -215,6 +217,17 @@ rcmip_ceds_units %>%
     split(f = interaction(.$scenario, .$em)) %>%
     lapply(my_replace_na_fxn) %>%
     do.call(what = "rbind") ->
+    rcmip_ceds_emiss
+
+# Extend the emissions until 1745.
+rcmip_ceds_emiss %>%
+    # Because of the way that the extend_to_1745 function was written the
+    # rename the em column so that it will work with this function.
+    rename(variable = em) %>%
+    split(., .$scenario) %>%
+    lapply(FUN = extend_to_1745) %>%
+    bind_rows %>%
+    rename(em = variable) ->
     rcmip_ceds_emiss
 
 write.csv(rcmip_ceds_emiss, file = file.path(DIRS$L0, "L0.rcmip_ceds_emiss.csv"), row.names = FALSE)

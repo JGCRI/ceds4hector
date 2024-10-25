@@ -65,7 +65,8 @@ list.files(system.file(package = "hector", "input"),
            full.names = TRUE) %>% 
     lapply(my_run_hector) %>% 
     bind_rows %>% 
-    mutate(source = "default") -> 
+    mutate(source = "default") %>% 
+    filter(!grepl("_noperm", scenario)) -> 
     default_results
 ```
 
@@ -80,7 +81,8 @@ list.files(here::here("inputs"),
     lapply(my_run_hector) %>% 
     bind_rows %>% 
     mutate(source = "ceds") %>% 
-    mutate(scenario = gsub(scenario, pattern = "ceds_", replacement = "")) -> 
+    mutate(scenario = gsub(scenario, pattern = "ceds_", replacement = ""))  %>% 
+    filter(!grepl("_noperm", scenario)) -> 
     ceds_results
 ```
 

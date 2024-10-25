@@ -20,98 +20,19 @@ source(here::here("scripts", "constants.R"))
 # Read in data!
 ceds_emiss <- read.csv(file.path(DIRS$L0, "L0.ceds_emiss.csv"))
 rcmip_emiss <- read.csv(file.path(DIRS$L0, "L0.rcmip_ceds_emiss.csv"))
-obs_conc <-  read.csv(file.path(DIRS$L0, "L0.conc_obs.csv"))
+rcmip_ch4n2o_emiss <- read.csv(file.path(DIRS$L1, "L1.hector_rcmip_emiss.csv")) %>%
+    filter(variable %in% c(EMISSIONS_CH4(), EMISSIONS_N2O()))
 
 # Load mapping file
 mapping <- read.csv(file.path(DIRS$MAPPING, "CEDS_Hector_mapping.csv"),
                     comment.char = "#")
-
-# Function that uses CH4 concentrations and back calculates the emissions
-# Args
-#   input_ch4: data.frame of the CH4 concentrations
-#   input_nox: data.frame of the NOX emissions
-#   input_co: data.frame of the CO emissions
-#   input_nmvoc: data.frame of the NMVOC emissions
-#   NOX_0: numeric, default set 3.877282 of the 1745 NOX emissions, may want to change to CEDS
-#   CO_0: numeric, default set to 348.5274 of the 1745 CO emissions, may want to change to CEDS
-#   NMVOC_0: numeric, default set to 60.02183 the 1745 NMVOC emissions, may want to change to CEDS
-# Returns: data.frame of emissions that would produce the [CH4] in Hector
-get_ch4_emissions <- function(input_ch4, input_nox, input_co, input_nmvoc,
-                              NOX_0 =  3.877282, CO_0 = 348.5274, NMVOC_0 = 60.02183){
-
-    # Quality check the inputs, make sure we are working with the right units and
-    # that the time series is continuous! over kill but whatever
-    assert_that(has_name(x = input_ch4, which = c("year", "variable", "value", "units")))
-    # assert_that(are_equal(unique(input_ch4$units), "pppbv CH4"))
-    assert_that(are_equal(unique(diff(input_ch4$year)), 1))
-    assert_that(has_name(x = input_nox, which = c("year", "variable", "value", "units")))
-    assert_that(are_equal(unique(input_nox$units), "Tg N"))
-    assert_that(are_equal(unique(diff(input_nox$year)), 1))
-    assert_that(has_name(x = input_co, which = c("year", "variable", "value", "units")))
-    assert_that(are_equal(unique(input_co$units), "Tg CO"))
-    assert_that(are_equal(unique(diff(input_co$year)), 1))
-    assert_that(has_name(x = input_nmvoc, which = c("year", "variable", "value", "units")))
-    assert_that(are_equal(unique(input_nmvoc$units), "Tg NMVOC"))
-    assert_that(are_equal(unique(diff(input_nmvoc$year)), 1))
-    assert_that(are_equal(nrow(input_co), nrow(input_ch4)))
-
-    # After making sure that all the inputs match what we need extract the values.
-    ch4_conc <- input_ch4$value
-    nox_vals <- input_nox$value
-    nmvoc_vals <- input_nmvoc$value
-    co_vals <- input_co$value
-
-    # Default values from the ini files.
-    # CH4 component constants
-    M0= 731.41  		# 731.41 ppb preindustrial methane IPCC AR6 Table 7.SM.1, the CH4 forcing equations is calibrated to a M0 of 731.41 ppb
-    Tsoil=160 			# lifetime of soil sink (years)
-    Tstrat=120          # lifetime of tropospheric sink (years)
-    UC_CH4=2.78			# Tg(CH4)/ppb unit conversion between emissions and concentrations
-    CH4N=335	        # Natural CH4 emissions (Tgrams)
-
-    # OH component constants
-    TOH0=6.6			# inital OH lifetime (years)
-    CNOX=0.0042			# coefficent for NOX
-    CCO=-0.000105		# coefficent for CO
-    CNMVOC=-0.000315	# coefficent for NMVOC (non methane VOC)
-    CCH4=-0.32			# coefficent for CH4
-
-
-    # Modify the concentrations time series to account for
-    # for the time lag.
-    ch4_conc <- c(NA, ch4_conc)[1:length(nmvoc_vals)]
-
-    # OH lifetime calculations
-    a <- CCH4 * log(ch4_conc/M0)
-    b <- CNOX*(nox_vals - NOX_0)
-    c <- CCO * (co_vals - CO_0)
-    d <- CNMVOC*(nmvoc_vals - NMVOC_0)
-    toh <- (a + b + c + d)
-    tau <- TOH0 * exp( -1 * toh )
-
-    # Calculate the change in CH4 concentrations and pad to make sure
-    # it is the correct length.
-    dch4 <- c(diff(ch4_conc), NA)
-    # Use (S5) to calculate the emissions.
-    emiss <- UC_CH4 * (dch4 + (ch4_conc/tau) + (ch4_conc/Tstrat) + (ch4_conc/Tsoil))
-    emiss <- emiss - CH4N # remove the natural emissions
-
-    data.frame(year = input_ch4$year,
-               value = emiss,
-               variable = EMISSIONS_CH4(),
-               units = getunits(EMISSIONS_CH4())) %>%
-        na.omit() ->
-        out
-
-    return(out)
-
-}
 
 # 1. Main Chunk ----------------------------------------------------------------
 # One of the differences between the CEDS and RCMIP data is that CEDS lacks
 # scenario information, since we want to use CEDS data with all of the different
 # scenarios we will need to add the scenario information to the CEDS data frame.
 
+# 1.A. Aggregate CEDS & RCMIP emissions together if needed ---------------------
 # Save a copy of all the RCMIP scenario names.
 rcmip_emiss %>%
     select(scenario) %>%
@@ -155,10 +76,11 @@ ceds_data %>%
     summarise(value = sum(value, na.rm = TRUE)) %>%
     ungroup %>%
     na.omit %>%
-    filter(year <= 2020) %>%
+    filter(year <= 2022) %>%
     rename(ceds_variable = em, ceds_value = value) ->
     combo_emissions
 
+# 1.B. Convert to Hector units --------------------------------------------------
 # Map the CEDS to Hector emission names and units
 # TODO should need to add some better notes about why this is incomplete.
 combo_emissions %>%
@@ -189,65 +111,75 @@ data.frame(scenario = scn,
            units = u) ->
     early_eimss
 
-# Right now the N2O and CH4 emissions are incomplete, we are working on
-# some sort of method to add in those emissions.
+# Right now we are not using CEDS emissions for CH4 and N2O pre 1970.
 rbind(early_eimss, ceds_hector_impcomplete) %>%
     arrange(scenario, variable) ->
     ceds_hector_ch4_n2o_incomplete
 
-# TODO
-# Need to add chunk of code that extends the CH4 and N2O emissions until 1745.
-# Extend CH4 emissions until 1745.
-# So the CEDS CH4 emissions start in 1970 and we need them to start in 1745.
-# We are able to do this inverting Hector's CH4 concentration calculations to
-# figure out what the CH4 emissions are and will use the helper function
-# defined above.
+# 1.C. Complete CH4 & N2O Emissions --------------------------------------------
+# Since we are not using the CEDS emissions for CH4 and N2O before 1970 we
+# need to insure a smooth transition between the default values and the CEDS
+# values.
+
+# Based on expert opinion from S. Smith we want to use 10 years to transition
+# between default Hector and CEDS CH4 emissions.
+ch4_trans_yrs <- 10
+
+# Figure out the max year of the default Hector emissions we want to keep.
 ceds_hector_ch4_n2o_incomplete %>%
     filter(variable == EMISSIONS_CH4()) %>%
     pull(year) %>%
     min ->
-    ch4_start_yr
+    max_ch4_yr
 
-# Extract the CH4 concentrations from the observations.
-ch4_conc <- filter(obs_conc, (variable == CONCENTRATIONS_CH4() & year < ch4_start_yr))
+srt_ch4_transtion <- max_ch4_yr - ch4_trans_yrs
 
-# Extract the non-methane emissions that are required for this back calculation.
-scn <- "historical"
-nmvoc_emiss <- filter(ceds_hector_ch4_n2o_incomplete, (variable == EMISSIONS_NMVOC() & scenario == scn & year < ch4_start_yr))
-co_emiss <- filter(ceds_hector_ch4_n2o_incomplete, (variable == EMISSIONS_CO() & scenario == scn & year < ch4_start_yr))
-nox_emiss <- filter(ceds_hector_ch4_n2o_incomplete, (variable == EMISSIONS_NOX() & scenario == scn & year < ch4_start_yr))
+# Subset the RCMIP emissions to only include the CH4 emissions.
+rcmip_ch4n2o_emiss %>%
+    filter(variable == EMISSIONS_CH4()) %>%
+    filter(year < max_ch4_yr) %>%
+    # Replace the transition years with NAs
+    mutate(value = if_else(year >= srt_ch4_transtion, NA, value)) %>%
+    # Add the CEDS data and arrange
+    bind_rows(filter(ceds_hector_ch4_n2o_incomplete,
+                     variable == EMISSIONS_CH4())) %>%
+    arrange(year) %>%
+    mutate(value = na.approx(value, na.rm = FALSE)) ->
+    complete_CH4
 
-# Save a copy of the initial emissions.
-NOX_0 <- nox_emiss$value[[1]]
-CO_0 <- co_emiss$value[[1]]
-NMVOC_0 <- nmvoc_emiss$value[[1]]
+# N2O Emissions
+# Based on expert opinion from S. Smith we want to start the transition at 1940
 
-# Calculate the required emissions
-get_ch4_emissions(input_ch4 = ch4_conc, input_nox = nox_emiss,
-                  input_co = co_emiss, input_nmvoc = nmvoc_emiss,
-                  NOX_0 = NOX_0, CO_0 = CO_0, NMVOC_0 = NMVOC_0) ->
-    ch4_emissions
-
-ch4_emissions %>%
-    filter(year == min(year)) %>%
-    mutate(year = 1745) %>%
-    rbind(ch4_emissions) ->
-    ch4_emissions
-
-# Repeat the emissions data table for X number of scenarios
-scns <- unique(ceds_hector_ch4_n2o_incomplete$scenario)
-early_ch4_emissions_scns <- do.call(rbind, replicate(length(scns), ch4_emissions, simplify = FALSE))
-early_ch4_emissions_scns$scenario <- rep(scns, each = nrow(ch4_emissions))
-
-# Add the early emissions to the other ceds emissions.
+# Figure out the max year of the default Hector emissions we want to keep.
 ceds_hector_ch4_n2o_incomplete %>%
-    bind_rows(early_ch4_emissions_scns) %>%
-    arrange(scenario, variable, year) ->
-    ceds_hector_n2o_incomplete
+    filter(variable == EMISSIONS_N2O()) %>%
+    pull(year) %>%
+    min ->
+    max_n2o_yr
 
-# TODO need to figure out what do to about the n2o emissions.
-write.csv(ceds_hector_ch4_n2o_incomplete,
-          file = file.path(DIRS$L1, "L1.incomplete_ceds_hector.csv"),
+srt_n2o_transtion <- 1940
+
+# Subset the RCMIP emissions to only include the N2O emissions.
+rcmip_ch4n2o_emiss %>%
+    filter(variable == EMISSIONS_N2O()) %>%
+    filter(year < max_n2o_yr) %>%
+    # Replace the transition years with NAs
+    mutate(value = if_else(year >= srt_n2o_transtion, NA, value)) %>%
+    # Add the CEDS data and arrange
+    bind_rows(filter(ceds_hector_ch4_n2o_incomplete,
+                     variable == EMISSIONS_N2O())) %>%
+    arrange(year) %>%
+    mutate(value = na.approx(value, na.rm = FALSE)) ->
+    complete_N2O
+
+# 1.D. Save Output -------------------------------------------------------------
+bind_rows(complete_N2O,
+          complete_CH4,
+          ceds_hector_ch4_n2o_incomplete) ->
+    ceds_hector_emiss
+
+write.csv(ceds_hector_emiss,
+          file = file.path(DIRS$L1, "L1.ceds_hector.csv"),
           row.names = FALSE)
 
 

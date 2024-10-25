@@ -41,7 +41,7 @@ CEDS_FINAL_YEAR <- 2022
 
 # 3. Common Functions ----------------------------------------------------------
 
-# TODO idk could generalize to make more useful
+# TODO should generalize to make more useful
 # Extend the emissions until 1745
 # Args
 #   x: data.frame emissions that start in 1750
