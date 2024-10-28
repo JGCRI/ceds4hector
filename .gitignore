@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 hector-CEDS.Rproj
+*.DS_Store
+*.html
+#*/scratch/ #for now let's save a working copy of the scratch files... jsut in case

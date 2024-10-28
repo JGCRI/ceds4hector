@@ -1,0 +1,283 @@
+---
+title: "Commpare Hector Runs"
+author: "Kalyn Dorheim"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true             # Enables the Table of Contents
+    toc_float:            # Configures the floating TOC
+      collapsed: false    # Whether the TOC starts collapsed
+      smooth_scroll: true # Enables smooth scrolling to sections
+---
+
+Here we are going to compare the results for Hector driven with CEDS and the default 
+Hector runs. 
+
+# Set Up & Run Hector
+
+```{r, warning = FALSE, message = FALSE}
+# Set up the environment 
+library(dplyr)
+library(ggplot2)
+library(hector)
+library(tidyr)
+
+theme_set(theme_bw(base_size = 14))
+
+BASE_DIR <- here::here()
+
+
+# Some vectors of the scenarios and the variables we would like to look at. 
+scns  <- c("ssp119", "ssp245", "ssp585")
+emiss <- c("BC_emissions", "CH4_emissions", "CO_emissions", "N2O_emissions", "NH3_emissions", 
+           "NMVOC_emissions", "NOX_emissions", "OC_emissions", "SO2_emissions", "ffi_emissions")
+conc  <- c(CONCENTRATIONS_CH4(), CONCENTRATIONS_N2O(), CONCENTRATIONS_CO2())
+rf    <- c(RF_BC(), RF_CH4(), RF_N2O(), RF_NH3(), RF_SO2())
+temp  <- c(GLOBAL_TAS(), RF_TOTAL())
+```
+
+
+```{r}
+
+# Quick run hector and fetch the outputs of interest 
+# Args 
+#   ini: str path to the ini file 
+# Return: data.frame of long format of hector results 
+my_run_hector <- function(ini){
+    
+    name <- gsub(x = basename(ini), pattern = "hector_|.ini", replacement = "")
+    
+    hc <- newcore(ini, name = name)
+    run(hc, 2100)
+    
+    out <- fetchvars(hc, 1745:2100, vars = c(emiss, conc, rf, temp))
+    return(out)
+    
+}
+```
+
+Default Hector runs
+
+```{r}
+# Run Hector using the default emissions 
+list.files(system.file(package = "hector", "input"), 
+           pattern = paste0(scns, collapse = "|"), 
+           full.names = TRUE) %>% 
+    lapply(my_run_hector) %>% 
+    bind_rows %>% 
+    mutate(source = "default") %>% 
+    filter(!grepl("_noperm", scenario)) -> 
+    default_results
+```
+
+
+Hector using the CEDS emissions 
+
+```{r}
+# Run Hector our new emissions 
+list.files(here::here("inputs"), 
+           pattern = paste0(collapse = "|", scns), 
+           full.names = TRUE) %>% 
+    lapply(my_run_hector) %>% 
+    bind_rows %>% 
+    mutate(source = "ceds") %>% 
+    mutate(scenario = gsub(scenario, pattern = "ceds_", replacement = ""))  %>% 
+    filter(!grepl("_noperm", scenario)) -> 
+    ceds_results
+```
+
+```{r}
+rslts <- rbind(default_results, ceds_results)
+max_yr <- 2050
+```
+
+
+
+# Comparison Plots 
+
+## BC 
+
+```{r, fig.width=10, fig.height=6}
+type <- "BC"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## CO 
+
+```{r, fig.width=10, fig.height=6}
+type <- "CO"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    filter(variable == EMISSIONS_CO()) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## NH3 
+
+```{r, fig.width=10, fig.height=6}
+type <- "NH3"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## NMVOC 
+
+```{r, fig.width=10, fig.height=6}
+type <- "NMVOC"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## NOX 
+
+```{r, fig.width=10, fig.height=6}
+type <- "NOX"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## OC 
+
+```{r, fig.width=10, fig.height=6}
+type <- EMISSIONS_OC()
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## SO2 
+
+```{r, fig.width=10, fig.height=6}
+type <- "SO2"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+## CO2 
+
+```{r, fig.width=10, fig.height=6}
+type <- "ffi_emissions"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+
+
+type <- "CO2"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+
+## CH4 
+
+```{r, fig.width=10, fig.height=6}
+type <- "CH4"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+
+
+## N2O 
+
+I think there is still some work to do for the transition
+
+```{r, fig.width=10, fig.height=6}
+type <- "N2O"
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+
+
+## Total RF & Temp 
+
+
+```{r, fig.width=10, fig.height=6}
+type <- GLOBAL_TAS()
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>%  
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
+```{r, fig.width=10, fig.height=6}
+type <- RF_TOTAL()
+rslts %>% 
+    filter(year <= max_yr) %>% 
+    filter(grepl(type, variable)) %>% 
+    ggplot(aes(year, value, color = source, linetype = source)) + 
+    geom_vline(xintercept = 2022, alpha = 0.5) +
+    geom_line(linewidth = 0.75) + 
+    facet_grid(variable ~ scenario, scales = "free") + 
+    labs(y = NULL, x = NULL, title = type)
+```
+
