@@ -66,22 +66,23 @@ rslts <- rbind(default_out, ceds_out)
 DIR <- here::here("data", "L3"); dir.create(DIR)
 write.csv(rslts, file = file.path(DIR, "output-hector-runs.csv"), row.names = FALSE)
 
+# Make a plot for all of the different variables
+unique(rslts$variable) %>%
+    lapply(function(VAR){
 
-rslts %>%
-    filter(variable == EMISSIONS_NH3()) %>%
-    filter(year >= 1950) %>%
-    ggplot(aes(year, value, color = scenario)) +
-    geom_line() +
-    scale_color_manual(values = SSP_COLORS)
+        UNITS <-  unique(filter(default_out, variable == VAR)[["units"]])
+        ggplot() +
+            geom_line(data = filter(default_out, variable == VAR),
+                      aes(year, value, color = scenario), alpha = 0.6) +
+            geom_line(data = filter(ceds_out, variable == VAR),
+                      aes(year, value, color = scenario), linewidth = 1) +
+            scale_color_manual(values = SSP_COLORS) +
+            labs(title = VAR, y = UNITS, x = NULL) ->
+            plot
+
+        ggsave(filename = file.path(DIR, paste0(VAR, "-fig.pdf")))
 
 
-VAR <- FFI_EMISSIONS()
-UNITS <-  unique(filter(default_out, variable == VAR)[["units"]])
-ggplot() +
-    geom_line(data = filter(default_out, variable == VAR),
-              aes(year, value, color = scenario), alpha = 0.6) +
-    geom_line(data = filter(ceds_out, variable == VAR),
-              aes(year, value, color = scenario), linewidth = 1) +
-    scale_color_manual(values = SSP_COLORS) +
-    labs(title = VAR, y = UNITS, x = NULL)
+    })
+
 
