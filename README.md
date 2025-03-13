@@ -6,12 +6,14 @@ This project can be used to prepare the Hector `.ini` file and emissions `.csv` 
 **Getting started** 
 
 1. **Clone the Repository** Clone a copy of this repository to your local machine.
-2. **Download Raw Data Files** The raw data files are too large to be committed to the Git repository. You can download them from Zenodo by running the following command in your terminal:
+2. **Download Raw Data Files** The raw data files are too large to be included in our GitHub repository. You can download them from Zenodo by running the following commands in your terminal:
 
 ```
-sh hector-CEDS/raw-data/get-raw-data.sh
+cd data/raw-data
+sh get-raw-data.sh
 ```
-3. **Install Dependencies** Install the required packages listed in `hector-CEDS/scripts/constants.R`
+
+3. **R Dependencies** Install the required packages listed in `hector-CEDS/scripts/constants.R`
 
 **Run Workflow**
 
