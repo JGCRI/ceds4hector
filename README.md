@@ -3,9 +3,6 @@
 
 This project can be used to prepare the Hector `.ini` file and emissions `.csv` table from the 2024-07-08 [CEDS](https://github.com/jGCRI/ceds) release. The tentative plan is for this workflow to eventually be incorporated into gcam-data, but for now, it is a standalone workflow. Setup instructions are written for macOS users; Windows users may need to make some adjustments.
 
-
-This project can be used to prepare the Hector ini file and emissions csv table using from the 2024-07-08 [CEDS](https://github.com/jGCRI/ceds) release, the tentative plan is for this workflow to eventual be incorporated in gcam-data but for now this is a stand alone workflow. Set up instructions are written for mac users, window users may have to make some adjustments. 
-
 **Getting started** 
 
 1. **Clone the Repository** Clone a copy of this repository to your local machine.
