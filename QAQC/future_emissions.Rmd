@@ -1,0 +1,259 @@
+---
+title: "Future Emissions"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+
+
+```{r knit settings, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, 
+                      out.width='80%', fig.align='center', class='center', 
+                      fig.path = "future_figs/")
+
+BASE_DIR <- here::here()
+
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(hector)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+
+Let's compare how the transition from the ceds historical emissions to the future scenario emissions. In order to try and minimize large jumps during the transition between the different emission scenarios. As of 3-17-2025 we were using a decade to do this transition for all species and scenarios, although it is not clear if that it really the best option, that is TBD. 
+
+```{r}
+# Load the emissions
+file.path(BASE_DIR, "data", "L3", "L3.hist_future.csv") %>% 
+  read.csv() -> 
+  all_emiss
+
+all_emiss %>% 
+  mutate(scenario = if_else(year <= 2022, "historical", scenario)) %>% 
+  distinct() %>% 
+  mutate(source = "new") -> 
+  hist_future_rslts
+
+```
+
+
+```{r}
+# Load the future emissions.
+list.files(system.file("input/tables", package = "hector"), 
+           pattern = "ssp", full.names = TRUE) %>% 
+  lapply(function(f){
+    
+    # Define the scenario name
+    scn <- gsub(pattern = "_emiss-constraints_rf.csv", x = basename(f), replacement = "")
+    
+    # Read the csv file and change from wide to long.
+    read.csv(file = f, comment.char = ";") -> 
+      wide_results
+    
+    # For only the emissions change the formatting of Hector form wide to long,
+    # for easy plotting comparisons
+    wide_results %>% 
+      pivot_longer(-Date) %>%
+      select(year = Date, variable = name, value) %>%  
+      mutate(scenario = scn) -> 
+      out
+    
+    return(out)
+    
+  }) %>% 
+  do.call(what = "rbind") %>%  
+  mutate(source = "old") -> 
+  default
+```
+
+
+
+```{r}
+# Helper function that quickly plots the results so that we may check out 
+# if there is a discontinuity in when there is the transition from the 
+# historical to the future period. 
+# Args 
+#   x: data.frame of scenario results 
+#   var: str name of variable we would like to plot 
+# Returns: list of plots, one close up focusing on the 
+# transition and one looking at the entire record
+quick_plot <- function(x, var){
+  unit_labs <- getunits(var)
+  
+  x_single_var <- filter(x, variable == var) 
+  
+  x_single_var %>%  
+    filter(scenario == "historical") -> 
+    hist
+  x_single_var %>% 
+    filter(!scenario == "historical", 
+           year <= 2100)->
+    fut
+  
+  ggplot() + 
+    geom_line(data = hist, aes(year, value)) + 
+    geom_line(data = fut, aes(year, value, color = scenario)) + 
+    labs(title = var, y = unit_labs, x = NULL) -> 
+    full
+  
+  x_single_var %>%  
+    filter(scenario == "historical") %>% 
+    filter(year >= 1990) -> 
+    hist
+  x_single_var %>% 
+    filter(!scenario == "historical", 
+           year <= 2050)->
+    fut
+  
+  ggplot() + 
+    geom_line(data = hist, aes(year, value)) + 
+    geom_point(data = fut, aes(year, value, color = scenario)) + 
+    labs(title = var, y = unit_labs, x = NULL) -> 
+    zoom
+  
+  return(list("full" = full, "zoom" = zoom))
+  
+}
+
+
+# Helper function that quickly plots the old emissions (V3.2) with the 
+# the new emissions 
+# Args 
+#   default: data.frame of the old scenarios
+#   hist_future_rslts: data.frame of the new emissions
+#   var: str name of variable we would like to plot 
+#   yrs_to_plot: int vector of years to include in the plot
+# Returns: list of plots, one close up focusing on the 
+# transition and one looking at the entire record
+old_new_plot <- function(default, hist_future_rslts, var, yrs_to_plot){
+  
+  # Subset the data frames for the variable and years of interest
+  default %>% 
+    filter(variable == var, 
+           year %in% yrs_to_plot) -> 
+    default_emiss
+  
+  hist_future_rslts %>% 
+    filter(variable == var, 
+           year %in% yrs_to_plot) -> 
+    future_emiss
+  
+  # Make the comparison plot
+  ggplot() + 
+    geom_line(data = default_emiss, aes(year, value, group = scenario), color = "grey") + 
+    geom_line(data = future_emiss, aes(year, value, color = scenario), linewidth = 1) + 
+    labs(title = var, y = getunits(var), x = NULL, caption = "grey is V3.2 ssp inputs") -> 
+    plot 
+  
+  return(plot)
+  
+}
+```
+
+
+## BC Emissions
+
+```{r bc_plot}
+var <- EMISSIONS_BC()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+
+
+## CH4 Emissions
+
+```{r ch4_plot}
+var <- EMISSIONS_CH4()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+## CO Emissions
+
+```{r co_plot}
+var <- EMISSIONS_CO()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+
+## FFI Emissions
+
+```{r ffi_plot}
+var <- FFI_EMISSIONS()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+## N2O Emissions
+
+```{r n2o_plot}
+var <- EMISSIONS_N2O()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+
+## NH3 Emissions
+
+```{r nh3_plot}
+var <- EMISSIONS_NH3()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+## NMVOC Emissions
+
+```{r nmvoc_plot}
+var <- EMISSIONS_NMVOC()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+## NOx Emissions
+
+```{r nox_plot}
+var <- EMISSIONS_NOX()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+## OC Emissions
+
+```{r oc_plot}
+var <- EMISSIONS_OC()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
+
+
+## SO2 Emissions
+
+```{r so2_plot}
+var <- EMISSIONS_SO2()
+
+quick_plot(x = hist_future_rslts, var)
+
+old_new_plot(default, hist_future_rslts, var, 1950:2100)
+```
