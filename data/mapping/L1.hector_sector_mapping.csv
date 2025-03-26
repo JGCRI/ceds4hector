@@ -1,0 +1,22 @@
+# Map of the different emissions and their sources to the total global value expected by hector,,
+# sector column indicates if already complete (0) or if the emissions must be combined across sources,,
+variable,sector,source
+BC_emissions,Industry,CEDS
+CH4_emissions,Industry,CEDS
+CO_emissions,Industry,CEDS
+ffi_emissions,0,CEDS
+N2O_emissions,Industry,CEDS
+NH3_emissions,Industry,CEDS
+NMVOC_emissions,Industry,CEDS
+NOX_emissions,Industry,CEDS
+OC_emissions,Industry,CEDS
+SO2_emissions,Industry,CEDS
+BC_emissions,biomass burn,BB4CMIP
+CH4_emissions,biomass burn,BB4CMIP
+CO_emissions,biomass burn,BB4CMIP
+N2O_emissions,biomass burn,BB4CMIP
+NH3_emissions,biomass burn,BB4CMIP
+NMVOC_emissions,biomass burn,BB4CMIP
+NOX_emissions,biomass burn,BB4CMIP
+OC_emissions,biomass burn,BB4CMIP
+SO2_emissions,biomass burn,BB4CMIP

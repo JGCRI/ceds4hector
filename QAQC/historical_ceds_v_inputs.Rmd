@@ -1,0 +1,132 @@
+---
+title: "Historical CEDS vs default Hector"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r knit settings, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, 
+                      out.width='80%', fig.align='center', class='center', 
+                      fig.path = "figs/")
+
+BASE_DIR <- here::here()
+
+library(dplyr)
+library(hector)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+Here we would like to do a comparison of the emission inputs we have created with CEDS and the default total emissions. This will help us identify where there are potential sectors missing and/or issues with emission conversion factors. We include a vertical line at at the 2015, the final year of the open burning emissions data set which was extended until 2022 but holding the 2015 values constant until 2022. 
+
+
+Some lingering questions 
+
+(1) Around 2000 the emissions for BC, NOx, OC emissions diverge, how did the CEDS emissions change over those time periods? Between the different versions? 
+(2) For the non CEDS emissions (LUC emissions, halocarbon, ect.) would we like to use the SSP2-45 emissions? Or is there a different scenario we should consider? 
+(3) How woudl we like to transition from the historical to the future period? 
+
+
+```{r}
+# Import the new historical emissions based on the new CEDS release
+read.csv(file.path(BASE_DIR, "data", "L2", "hector_ceds.csv")) %>% 
+  mutate(source = "new") -> 
+  new_emissions
+
+# Load the old historical emissions that are used as comparison 
+read.csv(file.path(BASE_DIR, "data", "L0", "L0.V32_emissions.csv")) %>% 
+  mutate(source = "old") -> 
+  old_emissions
+
+new_emissions %>% 
+  bind_rows(old_emissions) %>% 
+  filter(variable %in% new_emissions$variable) %>% 
+  select(year, variable, units, value, source) -> 
+  emiss_df
+```
+
+
+```{r}
+
+# Define a helper function to plot the new vs old emission time series against one another
+# Args 
+#   emiss_df: data.frame of the emissions, it can contain results for multiple emission types 
+#   var: string, variable name to plot 
+# Returns a ggplot figure
+quick_emiss_plot <- function(emiss_df, var){
+  
+  unit_label <- getunits(var)
+
+  emiss_df %>% 
+    filter(variable == var) %>% 
+    ggplot() + 
+    geom_vline(xintercept = 2016, color = "grey")+ 
+    geom_line(aes(year, value, color = source), linewidth = 0.75) + 
+    labs(title = var, y = unit_label, x = NULL) + 
+    scale_color_manual(values = c("old" = "darkgrey", "new" = "blue")) -> 
+    plot
+  
+  return(plot)
+}
+
+```
+
+
+A of `r Sys.Date()` this includes only CEDS + open burning emissions
+
+ 
+# BC Emissions
+
+```{r bc_plot}
+quick_emiss_plot(var = EMISSIONS_BC(), emiss_df)
+```
+
+# CH4 Emissions
+
+```{r ch4_plot}
+quick_emiss_plot(var = EMISSIONS_CH4(), emiss_df)
+```
+
+
+# CO Emissions
+
+```{r, co_plot}
+quick_emiss_plot(var = EMISSIONS_CO(), emiss_df)
+```
+
+
+# N2O Emissions
+
+```{r n2o_plot}
+quick_emiss_plot(var = EMISSIONS_N2O(), emiss_df)
+```
+
+# NH3 Emissions
+```{r nh3_plot}
+quick_emiss_plot(var = EMISSIONS_NH3(), emiss_df)
+```
+
+# NMVOC Emissions
+```{r nmvoc_plot}
+quick_emiss_plot(var = EMISSIONS_NMVOC(), emiss_df)
+```
+
+# NOx Emissions
+```{r nox_plot}
+quick_emiss_plot(var = EMISSIONS_NOX(), emiss_df)
+```
+
+# OC Emissions 
+```{r oc_plot}
+quick_emiss_plot(var = EMISSIONS_OC(), emiss_df)
+```
+
+# SO2 Emissions
+```{r so2_plot}
+quick_emiss_plot(var = EMISSIONS_SO2(), emiss_df)
+```
+
+# FFI Emissions
+```{r ffi_plot}
+quick_emiss_plot(var = FFI_EMISSIONS(), emiss_df)
+```
