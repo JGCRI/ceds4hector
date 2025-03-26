@@ -4,6 +4,8 @@
 # Start from a clean environment
 remove(list = ls())
 
+#remotes::install_github("jgcri/hector", force = TRUE)
+
 # Load the packages
 library(assertthat)
 library(data.table)

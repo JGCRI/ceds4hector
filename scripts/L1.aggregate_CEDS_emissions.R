@@ -21,7 +21,10 @@ file.path(DIRS$MAPPING, "L1.hector_sector_mapping.csv") %>%
 # Keep only the relevant emissions from the respective sources and aggregate to 
 # the global total values. 
 emissions %>%  
-  inner_join(mapping_file, by = join_by(sector, variable, source)) %>%
+  inner_join(mapping_file, by = join_by(sector, variable, source)) -> 
+  emissions_both_sources
+  
+emissions_both_sources %>% 
   summarise(value = sum(value), .by = c("year", "variable", "units")) -> 
   out
 
@@ -30,6 +33,23 @@ write.csv(out, file = file.path(DIRS$L1, "ceds_burnning_emiss.csv"), row.names =
 
 
 
+# Z. Diagnostic plots ---------------------------------------------
+if(FALSE){
+  
+  em <- EMISSIONS_N2O()
+  
+  
+  emissions_both_sources %>% 
+    filter(variable == em) %>% 
+    ggplot(aes(year, value, fill = source)) + 
+    geom_area() + 
+    theme_bw() +
+    labs(title = em, y = getunits(em), x = NULL)
+  
+  
+  
+}
+  
 
 
 

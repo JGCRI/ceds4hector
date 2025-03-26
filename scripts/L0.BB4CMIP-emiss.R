@@ -85,7 +85,7 @@ emissions %>%
     mutate(source = "BB4CMIP") ->
   emissions_till_2015
 
-out <- uniform_extend_df(emissions_till_2015, 2015, extend_to = 2023)
+out <- uniform_extend_df(emissions_till_2015, 2010:2015, extend_to = CEDS_FINAL_YEAR)
 
 # Save the emissions from the global carbon project
 write.csv(out, file = file.path(DIRS$L0, "L0.BB4CMIP_emissions.csv"), row.names = FALSE)
@@ -97,7 +97,7 @@ if(FALSE){
     source(here::here("scripts", "dev", "hector_comp_data.R"))
     hector_comp$source <- "hector"
 
-    em <-  "N2O_emissions"
+    em <- EMISSIONS_CH4()
 
     file.path(DIRS$L0, "L0.CEDS_emissions.csv") %>%
         read.csv() ->
