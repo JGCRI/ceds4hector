@@ -41,6 +41,7 @@ DIRS <- list(DATA = file.path(BASE, "data"),
              L1 = file.path(BASE, "data", "L1"),
              L2 = file.path(BASE, "data", "L2"),
              L3 = file.path(BASE, "data", "L3"),
+             output = file.path(BASE, "ouput"), 
              TABLES = file.path(BASE, "inputs", "tables"))
 
 sapply(DIRS, dir.create, showWarnings = FALSE, recursive = TRUE)
