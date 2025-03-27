@@ -18,7 +18,9 @@ source(here::here("scripts", "constants.R"))
 #   DIR: str path to where the ceds data files live
 #   ceds_v: str of the release version, I think it might typically be a date
 # Returns the str of the full ceds path
-find_my_ceds_files <- function(DIR, ceds_v = "v2024_07_08"){
+
+find_my_ceds_files <- function(DIR, ceds_v = "v_2025_03_18"){
+
   
   assert_that(dir.exists(DIR))
   
@@ -63,8 +65,8 @@ ceds_raw_data %>%
   # in preparation for joining with the mapping file.
   pivot_longer(starts_with("X"), names_to = "year") %>%
   mutate(year = as.integer(gsub(replacement = "", x = year, pattern = "X"))) %>%
-  rename(ceds_variable = em, ceds_units = units) %>%
-  inner_join(mapping, by = join_by(ceds_variable, ceds_units)) %>%
+  rename(ceds_variable = em, ceds_units = units) %>% 
+  inner_join(mapping, by = join_by(ceds_variable)) %>% 
   # Convert to Hector units and aggregate!
   mutate(value = value * cf) %>% 
   summarise(value = sum(value), .by = c("hector_variable", "year", "hector_units",
@@ -86,8 +88,11 @@ if(FALSE){
   library(ggplot2)
   source(here::here("scripts", "dev", "hector_comp_data.R"))
   
+  em_name <- EMISSIONS_CH4()
+    
   out %>%
-    filter(variable == em_name) %>%
+   # filter(grepl(x = ceds_variable, pattern = "CH4")) %>%
+    filter(variable == em_name) %>% 
     summarise(value = sum(value), .by = c("variable", "year", "units")) ->
     ceds_emiss
   

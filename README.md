@@ -45,8 +45,8 @@ ini <- "PATH/TO/hector-CEDS/inputs/hector_ceds_historical.ini"
 # Create a new Hector core with the specified ini file
 hc <- newcore(ini)
 
-# Run Hector up to the end of CEDS emissions data in 2022
-run(hc, runtodate = 2022)
+# Run Hector up to the end of CEDS emissions data in 2023
+run(hc, runtodate = 2023)
 
 # Use fetchvars to examine Hector results
 # For more examples, visit https://github.com/JGCRI/hector

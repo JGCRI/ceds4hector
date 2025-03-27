@@ -4,6 +4,8 @@
 # Start from a clean environment
 remove(list = ls())
 
+#remotes::install_github("jgcri/hector", force = TRUE)
+
 # Load the packages
 library(assertthat)
 library(data.table)
@@ -37,6 +39,7 @@ DIRS <- list(DATA = file.path(BASE, "data"),
              MAPPING = file.path(BASE, "data", "mapping"),
              L0 = file.path(BASE, "data", "L0"),
              L1 = file.path(BASE, "data", "L1"),
+             L2 = file.path(BASE, "data", "L2"),
              L3 = file.path(BASE, "data", "L3"),
              TABLES = file.path(BASE, "inputs", "tables"))
 
@@ -55,7 +58,7 @@ UNITS <- list(MTonne_to_Pg = 1e-3, # Convert from million tonne of carbon  to Pg
 # CEDS_EMISS <- c("BC", "CH4", "CO", "CO2", "N2O", "NH3", "NMVOC", "NOx", "OC", "SO2")
 #
 # This is the final year of the the CEDS data!
-CEDS_FINAL_YEAR <- 2022
+CEDS_FINAL_YEAR <- 2023
 
 
 

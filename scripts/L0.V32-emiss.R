@@ -27,7 +27,7 @@ to_keep <- c(emiss_to_keep, "daccs_uptake", "luc_uptake", "RF_albedo", "SV")
 wide_results[, to_keep] %>%
   pivot_longer(-Date) %>%
   select(year = Date, variable = name, value) %>%
-  filter(year <= 2022) ->
+  filter(year <= 2023) ->
   hector
 
 # Since these are full total global emission the sector information will be 
