@@ -65,7 +65,6 @@ file.path(DIRS$RAW_DATA, "1750-2015_v1.2_Emissions_bulk_em") %>%
 stopifnot(all(file.exists(files)))
 
 files %>% 
-    list.files(pattern = "csv", full.names = TRUE) %>%
     lapply(load_BB4CMIP_fxn) %>%
     do.call(what = "rbind") ->
     emissions
