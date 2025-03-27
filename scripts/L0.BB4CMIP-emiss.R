@@ -1,7 +1,9 @@
 # Description: Read in the global biomass burning emissions for CMIP6 (BB4CMIP)
 # these emissions will be combined with other CEDS and other anthropogenic
 # time series to get the total global emissions that will be used in Hector. 
-# The time series were extended to 2023 by repeating the 2015 values. 
+#
+# The time series were extended to 2023 by repeating the mean 2010:2015 emissions.
+
 #
 # 
 # Data Source: van Marle, M. J. E., Kloster, S., Magi, B. I., Marlon, J. R., 
@@ -63,6 +65,7 @@ file.path(DIRS$RAW_DATA, "1750-2015_v1.2_Emissions_bulk_em") %>%
 stopifnot(all(file.exists(files)))
 
 files %>% 
+    list.files(pattern = "csv", full.names = TRUE) %>%
     lapply(load_BB4CMIP_fxn) %>%
     do.call(what = "rbind") ->
     emissions
@@ -85,7 +88,9 @@ emissions %>%
     mutate(source = "BB4CMIP") ->
   emissions_till_2015
 
+
 out <- uniform_extend_df(emissions_till_2015, 2010:2015, extend_to = CEDS_FINAL_YEAR)
+
 
 # Save the emissions from the global carbon project
 write.csv(out, file = file.path(DIRS$L0, "L0.BB4CMIP_emissions.csv"), row.names = FALSE)
@@ -98,6 +103,7 @@ if(FALSE){
     hector_comp$source <- "hector"
 
     em <- EMISSIONS_CH4()
+
 
     file.path(DIRS$L0, "L0.CEDS_emissions.csv") %>%
         read.csv() ->

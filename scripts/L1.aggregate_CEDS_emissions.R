@@ -32,7 +32,6 @@ emissions_both_sources %>%
 write.csv(out, file = file.path(DIRS$L1, "ceds_burnning_emiss.csv"), row.names = FALSE)
 
 
-
 # Z. Diagnostic plots ---------------------------------------------
 if(FALSE){
   
@@ -50,8 +49,3 @@ if(FALSE){
   
 }
   
-
-
-
-
-

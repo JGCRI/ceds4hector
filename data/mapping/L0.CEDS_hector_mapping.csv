@@ -4,10 +4,17 @@
 ceds_variable,ceds_units,cf,hector_variable,hector_units,notes_on_cf,hector_sector
 SO2,ktSO2,0.5,SO2_emissions,Gg S,(32/64),Industry
 BC,ktC,0.001,BC_emissions,Tg,,Industry
+<<<<<<< HEAD
 CH4_Extension,ktCH4,0.001,CH4_emissions,Tg CH4,,Industry
 CO,ktCO,0.001,CO_emissions,Tg CO,,Industry
 CO2,ktCO2,2.72727E-07,ffi_emissions,Pg C/yr,(12/44) *  0.00001 ,0
 N2O_Extension,ktN2O,0.000636364,N2O_emissions,Tg N,(28/44) * 0.001,Industry
+=======
+CH4,ktCH4,0.001,CH4_emissions,Tg CH4,,Industry
+CO,ktCO,0.001,CO_emissions,Tg CO,,Industry
+CO2,ktCO2,2.72727E-07,ffi_emissions,Pg C/yr,(12/44) *  0.00001 ,0
+N2O,ktN2O,0.000636364,N2O_emissions,Tg N,(28/44) * 0.001,Industry
+>>>>>>> main
 NH3,ktNH3,0.001,NH3_emissions,Tg,,Industry
 NMVOC,ktNMVOC,0.001,NMVOC_emissions,Tg NMVOC,,Industry
 NOx,ktNO2,0.000304348,NOX_emissions,Tg N,(14/46)*0.001,Industry

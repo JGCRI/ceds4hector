@@ -29,7 +29,11 @@ Some lingering questions
 
 ```{r}
 # Import the new historical emissions based on the new CEDS release
+<<<<<<< HEAD
 read.csv(file.path(BASE_DIR, "data", "L2", "hector_ceds.csv")) %>% 
+=======
+read.csv(file.path(BASE_DIR, "data", "L1", "hector_emiss.csv")) %>% 
+>>>>>>> main
   mutate(source = "new") -> 
   new_emissions
 

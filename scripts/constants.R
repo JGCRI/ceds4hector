@@ -4,8 +4,11 @@
 # Start from a clean environment
 remove(list = ls())
 
+<<<<<<< HEAD
 #remotes::install_github("jgcri/hector", force = TRUE)
 
+=======
+>>>>>>> main
 # Load the packages
 library(assertthat)
 library(data.table)
@@ -39,9 +42,13 @@ DIRS <- list(DATA = file.path(BASE, "data"),
              MAPPING = file.path(BASE, "data", "mapping"),
              L0 = file.path(BASE, "data", "L0"),
              L1 = file.path(BASE, "data", "L1"),
+<<<<<<< HEAD
              L2 = file.path(BASE, "data", "L2"),
              L3 = file.path(BASE, "data", "L3"),
              output = file.path(BASE, "ouput"), 
+=======
+             L3 = file.path(BASE, "data", "L3"),
+>>>>>>> main
              TABLES = file.path(BASE, "inputs", "tables"))
 
 sapply(DIRS, dir.create, showWarnings = FALSE, recursive = TRUE)
