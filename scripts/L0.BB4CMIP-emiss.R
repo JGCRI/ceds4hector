@@ -1,10 +1,10 @@
-# Description: Read in the global biomass burning emissions for CMIP6 (BB4CMIP)
+# Description: Read in the global biomass burning emissions for CMIP& (BB4CMIP)
 # these emissions will be combined with other CEDS and other anthropogenic
 # time series to get the total global emissions that will be used in Hector. 
 #
-# The time series were extended to 2023 by repeating the mean 2010:2015 emissions.
+# The time series were extended to 2023 by repeating the mean 2012:2022 emissions.
 
-#
+# TODO need to add the CMIP7 ciatation here
 # 
 # Data Source: van Marle, M. J. E., Kloster, S., Magi, B. I., Marlon, J. R., 
 # Daniau, A.-L., Field, R. D., Arneth, A., Forrest, M., Hantson, S., Kehrwald, 
@@ -14,8 +14,7 @@
 # Data extracted by country using tiled, gridded country masks as used in CEDS:
 #  http://www.globalchange.umd.edu/ceds/
 #  
-#  Extraction from version 1.2 of open burning emissions downloaded from:
-#  https://esgf-node.llnl.gov/projects/input4mips/ by L. Feng, Oct 20, 2017.
+
 
 # 0. Set Up --------------------------------------------------------------------
 # Load the project constants and basic functions
@@ -31,24 +30,22 @@ load_BB4CMIP_fxn <- function(f){
     # Each of the files corresponded to a type of emissions single sector.
     d <- read.csv(f)
 
-    # assert that the data only contains one type of data
-    ver <- unique(d$ver)
-    stopifnot(length(ver) == 1)
+    # Make sure we have the global values 
+    stopifnot(unique(d$region) == "World")
+   
 
-    sector <- unique(d$sector)
-    stopifnot(length(sector) == 1)
-
+    
     # Determine emission species
     em <- unlist(strsplit(basename(f), split = "_|-"))[[1]]
 
     # Extract the global values
     inds <- which(grepl(x = colnames(d), pattern = "X"))
-    value <- as.vector(colSums(d[, inds]))
-    years <- as.vector(as.numeric(gsub(x = colnames(d)[inds], pattern = "X", replacement = "")))
-    units <- "Tg"
-
-    # Format output
-    out <- data.frame(year = years, sector, variable = em, value, units)
+    
+    # Format the output 
+    pivot_longer(d, names_to = "year", values_to = "value", cols = inds) %>% 
+      mutate(year = as.numeric(gsub(replacement = "", pattern = "X", x = year))) -> 
+      out
+    
     return(out)
 
 
@@ -56,8 +53,8 @@ load_BB4CMIP_fxn <- function(f){
 
 # 1. Main Chunk ----------------------------------------------------------------
 # Import raw data files
-file.path(DIRS$RAW_DATA, "1750-2015_v1.2_Emissions_bulk_em") %>%
-  list.files(pattern = "csv", full.names = TRUE) -> 
+file.path(DIRS$RAW_DATA) %>%
+  list.files(pattern = "gfed-bb4cmip_cmip7_global_0011", full.names = TRUE) -> 
   files
 
 # Assert that all the files exists, if this throws an error 
@@ -77,7 +74,7 @@ file.path(DIRS$MAPPING, "L0.BB4CMIP_hector_mapping.csv") %>%
 # Use the mapping file to aggregate the open burning emissions and
 # convert to Hector emissions.
 emissions %>%
-    inner_join(mapping, by = join_by(sector, variable)) %>%
+    inner_join(mapping, by = join_by(variable)) %>%
     mutate(value = value * cf) %>%
     summarise(value = sum(value), .by = c("year", "hector_variable",
                                           "hector_units", 
@@ -85,10 +82,10 @@ emissions %>%
     select(year, sector = hector_sector,
            variable = hector_variable, value, units = hector_units) %>%
     mutate(source = "BB4CMIP") ->
-  emissions_till_2015
+  emissions_till_2022
 
 
-out <- uniform_extend_df(emissions_till_2015, 2010:2015, extend_to = CEDS_FINAL_YEAR)
+out <- uniform_extend_df(emissions_till_2022, 2012:2022, extend_to = CEDS_FINAL_YEAR)
 
 
 # Save the emissions from the global carbon project
