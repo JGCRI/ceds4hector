@@ -4,6 +4,7 @@
 # Start from a clean environment
 remove(list = ls())
 
+DEBUG <- FALSE
 #remotes::install_github("jgcri/hector", force = TRUE)
 
 # Load the packages

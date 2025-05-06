@@ -66,6 +66,14 @@ files %>%
     do.call(what = "rbind") ->
     emissions
 
+
+if(DEBUG){
+  write.csv(emissions, file = file.path(DIRS$L0, "L0.BB4CMIP_emissions-raw.csv"), row.names = FALSE)
+}
+
+
+
+
 # Rad in the mapping file
 file.path(DIRS$MAPPING, "L0.BB4CMIP_hector_mapping.csv") %>%
     read.csv(comment.char = "#") ->
@@ -101,31 +109,17 @@ if(FALSE){
     em <- EMISSIONS_CH4()
 
 
-    file.path(DIRS$L0, "L0.CEDS_emissions.csv") %>%
-        read.csv() ->
-        ceds
-    
-    out %>%  
-      filter(variable == em) %>% 
+    emissions %>% 
+      mutate(value = (28/44) * value) %>% 
+      filter(variable == "Emissions|NOx|Biomass Burning") %>% 
       ggplot(aes(year, value)) + 
-      geom_line() + 
-      labs(title = em, y = getunits(em))
+      geom_line()
     
-    out %>%
-        bind_rows(ceds) %>%
-        filter(variable == em) %>%
-        summarise(value = sum(value, na.rm = TRUE), .by = c("year", "variable")) %>%
-        mutate(source = "CEDS + BB4CMIP") ->
-        out2
-
-    hector_comp %>%
-    bind_rows(out2) %>%
-        filter(variable == em) %>%
-      # filter(year <= 2015) %>%
-        ggplot() +
-        geom_line(aes(year, value, color = source)) +       
-      labs(title = em, y = getunits(em))
-
+    # Mt NO2/yr 
+      
+      
+      
+      
 
 }
 

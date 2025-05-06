@@ -1,13 +1,13 @@
-﻿# Map BB4CMIP emissions to hector units ,,,,,,
+# Map BB4CMIP emissions to hector units,,,,,,
 # cf is the conversion factor from BB4CMIP to Hector,,,,,,
 #  hector_sector = 0 indicates that the emissions are total global emissions other with the emissions are incomplete,,,,,,
 variable,units,cf,hector_variable,hector_units,hector_sector,cf_notes
-Emissions|BC|Biomass Burning,Mt BC/yr,1,BC_emissions,Tg,biomass burn,
-Emissions|CH4|Biomass Burning,Mt CH4/yr,1,CH4_emissions,Tg CH4,biomass burn,
-Emissions|CO|Biomass Burning,Mt CO/yr,1,CO_emissions,Tg CO,biomass burn,
+Emissions|BC|Biomass Burning,Mt BC/yr,1,BC_emissions,Tg,biomass burn, 
+Emissions|CH4|Biomass Burning,Mt CH4/yr,1,CH4_emissions,Tg CH4,biomass burn, 
+Emissions|CO|Biomass Burning,Mt CO/yr,1,CO_emissions,Tg CO,biomass burn, 
 Emissions|N2O|Biomass Burning,kt N2O/yr,0.00063648,N2O_emissions,Tg N,biomass burn,(2 *14.0067/44.013 ) * 0.001
-Emissions|NH3|Biomass Burning,Mt NH3/yr,1,NH3_emissions,Tg,biomass burn,
-Emissions|VOC|Biomass Burning,Mt VOC/yr,1,NMVOC_emissions,Tg NMVOC,biomass burn,
+Emissions|NH3|Biomass Burning,Mt NH3/yr,1,NH3_emissions,Tg,biomass burn, 
+Emissions|VOC|Biomass Burning,Mt VOC/yr,1,NMVOC_emissions,Tg NMVOC,biomass burn, 
 Emissions|NOx|Biomass Burning,Mt NO2/yr,0.636480131,NOX_emissions,Tg N,biomass burn,(2*14.0067/44.013 )   * 1
-Emissions|OC|Biomass Burning,Mt OC/yr,1,OC_emissions,Tg,biomass burn,
+Emissions|OC|Biomass Burning,Mt OC/yr,1,OC_emissions,Tg,biomass burn, 
 Emissions|Sulfur|Biomass Burning,Mt SO2/yr,500.7800312,SO2_emissions,Gg S,biomass burn,(32.1/64.1)*1000

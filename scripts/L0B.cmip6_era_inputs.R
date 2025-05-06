@@ -71,13 +71,15 @@ stopifnot(file.exists(open_burning_file)) # If this throws an error you need to 
 
 # Now load the data. 
 read.csv(rcmip_emissions_file) %>% 
-  filter(Scenario == "historical") %>% filter(grepl(pattern = "NOx", x = Variable)) %>%  
+  filter(Scenario == "historical") %>% 
   filter(Variable ==  "Emissions|NOx|MAGICC Fossil and Industrial") %>% 
   filter(Region == "World") %>% 
   pivot_longer(starts_with("X"), names_to = "year") %>% 
   mutate(year = as.integer(gsub("X", "", year))) %>% 
-  # Convert from units of NOx to N 
+  # Convert from units of NOx to N - this is what is says the units 
+  # are from RCMIP 
   mutate(value = value * 14.007/46.007) %>% 
+ # mutate(value = value * 28/44) %>% 
   select(year, value) %>% 
   mutate(variable = EMISSIONS_NOX()) -> 
   cmip6_era_antro_nox

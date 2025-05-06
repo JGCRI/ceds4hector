@@ -13,5 +13,6 @@ scripts <- c("L0.BB4CMIP-emiss.R",
 files <- file.path(BASE_DIR, "scripts", scripts)
 
 for(f in files){
+  print(f)
   source(f)
 }
