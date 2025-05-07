@@ -1,0 +1,177 @@
+---
+title: "CEDS CMIP7 vs CMIP6"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    theme: united
+    df_print: paged
+date: "`r Sys.Date()`"
+---
+
+Here we compare Hector results for the historical period when emission driven with CEDS from the CMIP6 and CMIP7 eras.  
+
+```{r, echo = FALSE, message = FALSE}
+library(dplyr)
+library(ggplot2)
+theme_set(theme_bw())
+
+# Load the hector data 
+hector_data <- read.csv(here::here("data/L3/hector_CEDS_rslts_data.csv"))
+diff_data <- read.csv(here::here("data/L3/hector_difference.csv"))
+```
+
+
+
+# Methods
+
+* Hector release V3.2.0 (Dorheim et al. 2024)
+* CMIP6 era results, both the historical and SSP scenario were from RCMIP protocol (Nicholls et al. 2020)
+* CMIP7 era results - updated CMIP6 historical scenario with emissions from 
+* CEDS `v_2025_03_18` for  BC, CH4, CO, fossil fuel and industry CO2, N2O, NH3, NMVOC, NOx (corrected units for burning emissions), OC and SO2
+* Open burning emissions data - extended data input4mips for CMIP7, for  BC, CH4, CO, N2O, NH3, NMVOC, NOx, OC, and SO2
+
+
+# Results 
+
+## BC 
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/BC_emissions.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_BC.png)
+
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_aci.png)
+
+BC emissions also contribute to RF from clouds
+
+
+## CH4 
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/CH4_emissions.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/CH4_concentration.png)
+The changes in CH4 concentrations are not only from the changes in CH4 emissions. The changes in NOx, CO, and NMOC emissions also contribute to the lower global CH4 concentrations. 
+
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_CH4.png)
+
+## CO
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/CO_emissions.png)
+Hector does not model CO RF - but CO emissions have indirect forcing effects on CH4 concentrations. 
+
+
+
+
+
+## CO2 (FFI)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/ffi_emissions.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/CO2_concentration.png)
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_CO2.png)
+
+
+
+## N2O
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/N2O_emissions.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/N2O_concentration.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_N2O.png)
+
+
+
+## NH3 
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/NH3_emissions.png) ![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_NH3.png)
+## NMVOC
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/NMVOC_emissions.png)
+
+Hector does not model NMVOC RF - but NMVOC emissions have indirect forcing effects on CH4 concentrations, so changes here contribute to the change in CH4 concentrations. 
+
+## NOx
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/NOx_emissions.png)
+Hector does not model NOx RF - but NOx emissions have indirect forcing effects on CH4 concentrations, so changes here contribute to the change in CH4 concentrations. 
+
+## OC
+
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/OC_emissions.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_OC.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_aci.png)
+
+OC emissions also contribute to aci RF 
+
+## SO2 
+
+
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/SO2_emissions.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_SO2.png)
+![](/Users/dorh012/Documents/2025/ceds4hector/data/L3/figs/RF_aci.png)
+
+SO2 emissions also contribute to aci RF 
+
+
+## Total RF 
+
+
+One of the challenges here is that some of the changes in forcing end up canceling each other out. But it looks like the changes in BC emissions might be responsible for some of the larger changes in radiative forcing in the recent history. 
+
+
+```{r, echo=FALSE, message=FALSE}
+diff_data %>% 
+  filter(grepl(pattern = "RF", x = variable)) %>% 
+  filter(!variable %in% c("RF_tot", "total aerosol RF")) %>% 
+  ggplot(aes(year, difference, color = variable)) + 
+  geom_line() + 
+  labs(title = "CMIP7 - CMIP6 Radiative Forcing", 
+       y = "W m-2")
+```
+
+
+```{r, echo=FALSE, message=FALSE}
+diff_data %>% 
+  filter(grepl(pattern = "RF", x = variable)) %>% 
+  filter(!variable %in% c("RF_tot", "total aerosol RF")) -> 
+  individual_rf
+
+diff_data %>% 
+  filter(variable == "RF_tot") -> 
+  total_rf
+
+ggplot() + 
+  geom_area(data = individual_rf, aes(year, difference, fill = variable)) + 
+  geom_line(data = total_rf, aes(year, difference, color = "total RF")) + 
+  labs(title = "CMIP7 - CMIP6 Radiative Forcing", 
+       y = "W m-2", x = NULL) + 
+  scale_color_manual(values = c("total RF" = "black"))
+```
+
+The CMIP7 era emissions result in increased forcing between 1750 till ~1860, after that the CMIP7 CEDS emissions decrease net total RF. Resulting in warming global temperature until 1975 and cooler global temperature in the more recent history. 
+
+
+```{r, echo=FALSE, message=FALSE}
+diff_data %>% 
+  filter(variable == "global_tas") %>% 
+  ggplot() + 
+  geom_line(aes(year, difference)) + 
+  labs(title = "CMIP7 - CMIP6 Global Temp", 
+       y = "C", x = NULL) 
+```
+
+
+
+
+# References 
+
+Nicholls, Z. R. J., Meinshausen, M., Lewis, J., Gieseke, R., Dommenget, D., Dorheim, K., Fan, C.-S., Fuglestvedt, J. S., Gasser, T., Golüke, U., Goodwin, P., Hartin, C., Hope, A. P., Kriegler, E., Leach, N. J., Marchegiani, D., McBride, L. A., Quilcaille, Y., Rogelj, J., … Xie, Z. (2020). Reduced Complexity Model Intercomparison Project Phase 1: introduction and evaluation of global-mean temperature response. Geoscientific Model Development, 13(11), 5175–5190. https://doi.org/10.5194/gmd-13-5175-2020
+
+Dorheim, K., Gering, S., Gieseke, R., Hartin, C., Pressburger, L., Shiklomanov, A. N., Smith, S. J., Tebaldi, C., Woodard, D. L., & Bond-Lamberty, B. (2024). Hector V3.2.0: functionality and performance of a reduced-complexity climate model. Geoscientific Model Development, 17(12), 4855–4869. https://doi.org/10.5194/gmd-17-4855-2024
+
+
+van Marle, M. J. E., Kloster, S., Magi, B. I., Marlon, J. R., 
+Daniau, A.-L., Field, R. D., Arneth, A., Forrest, M., Hantson, S., Kehrwald, 
+N. M., Knorr, W., Lasslop, G., Li, F., Mangeon, S., Yue, C., Kaiser, J. W., 
+and van der Werf, G. R.: Historic global biomass burning emissions for CMIP6 
+(BB4CMIP) based on merging satellite observations with proxies and fire models (1750–2015), 
+Geosci. Model Dev., 10, 3329-3357, https://doi.org/10.5194/gmd-10-3329-2017, 2017.
