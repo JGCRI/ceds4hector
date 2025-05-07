@@ -79,13 +79,12 @@ read.csv(rcmip_emissions_file) %>%
   # Convert from units of NOx to N - this is what is says the units 
   # are from RCMIP 
   mutate(value = value * 14.007/46.007) %>% 
- # mutate(value = value * 28/44) %>% 
   select(year, value) %>% 
   mutate(variable = EMISSIONS_NOX()) -> 
   cmip6_era_antro_nox
 
-# Since the only difference between the CMIP6 and CMIp6 releases of the 
-# open burnding emissions is the extension from 2015 - 2023, if we 
+# Since the only difference between the CMIP6 and CMIP6 releases of the 
+# open burning emissions is the extension from 2015 - 2023, if we 
 # subset the CMIP7 open burning emissions data set to only include 
 # the values pre 2015 we essentially have the CMIP6 values we need. 
 read.csv(open_burning_file) %>% 

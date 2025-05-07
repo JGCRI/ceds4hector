@@ -8,6 +8,6 @@ Emissions|CO|Biomass Burning,Mt CO/yr,1,CO_emissions,Tg CO,biomass burn,
 Emissions|N2O|Biomass Burning,kt N2O/yr,0.00063648,N2O_emissions,Tg N,biomass burn,(2 *14.0067/44.013 ) * 0.001
 Emissions|NH3|Biomass Burning,Mt NH3/yr,1,NH3_emissions,Tg,biomass burn, 
 Emissions|VOC|Biomass Burning,Mt VOC/yr,1,NMVOC_emissions,Tg NMVOC,biomass burn, 
-Emissions|NOx|Biomass Burning,Mt NO2/yr,0.636480131,NOX_emissions,Tg N,biomass burn,(2*14.0067/44.013 )   * 1
+Emissions|NOx|Biomass Burning,Mt NO2/yr,0.304457076,NOX_emissions,Tg N,biomass burn,(14.0067/46.0055 )   * 1
 Emissions|OC|Biomass Burning,Mt OC/yr,1,OC_emissions,Tg,biomass burn, 
 Emissions|Sulfur|Biomass Burning,Mt SO2/yr,500.7800312,SO2_emissions,Gg S,biomass burn,(32.1/64.1)*1000
