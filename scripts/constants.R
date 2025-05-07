@@ -4,6 +4,7 @@
 # Start from a clean environment
 remove(list = ls())
 
+DEBUG <- FALSE
 #remotes::install_github("jgcri/hector", force = TRUE)
 
 # Load the packages
@@ -19,13 +20,13 @@ library(readxl)
 
 # TODO probably use a package manager but for now this is probably good enough
 stopifnot(packageVersion("assertthat") == "0.2.1")
-stopifnot(packageVersion("data.table") == "1.14.8")
+stopifnot(packageVersion("data.table") == "1.17.0")
 stopifnot(packageVersion("dplyr") == "1.1.4")
 stopifnot(packageVersion("here") == "1.0.1")
 stopifnot(packageVersion("tidyr") == "1.3.1")
-stopifnot(packageVersion("zoo") == "1.8.12")
+stopifnot(packageVersion("zoo") == "1.8.14")
 stopifnot(packageVersion("hector") == "3.2.0")
-stopifnot(packageVersion("readxl") == "1.4.3")
+stopifnot(packageVersion("readxl") == "1.4.5")
 
 
 # TODO packages that are probably not going to be required but could be helpful during

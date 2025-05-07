@@ -35,17 +35,45 @@ write.csv(out, file = file.path(DIRS$L1, "ceds_burnning_emiss.csv"), row.names =
 # Z. Diagnostic plots ---------------------------------------------
 if(FALSE){
   
-  em <- EMISSIONS_N2O()
+
+  
+  file.path(DIRS$L1, "ceds_burnning_emiss-og.csv") %>% 
+    read.csv %>% 
+    mutate(source = "cmip6") -> 
+    cmip6_data
+
+  
+  file.path(DIRS$L1, "ceds_burnning_emiss.csv") %>% 
+    read.csv %>% 
+    mutate(source = "cmip7") -> 
+    cmip7_data
   
   
-  emissions_both_sources %>% 
-    filter(variable == em) %>% 
-    ggplot(aes(year, value, fill = source)) + 
-    geom_area() + 
-    theme_bw() +
-    labs(title = em, y = getunits(em), x = NULL)
+  system.file(package = "hector", "input/tables/ssp245_emiss-constraints_rf.csv") %>% 
+    read.csv(comment.char = ";") %>% 
+    select(year = Date, value = NOX_emissions) -> 
+    d
+  
+  # Problem 
+  # "NOX_emissions"
   
   
+  # [1] "BC_emissions"    "CH4_emissions"   "CO_emissions"    "N2O_emissions"   "NH3_emissions"  
+  # [6] "NMVOC_emissions" "NOX_emissions"   "OC_emissions"    "SO2_emissions"   "ffi_emissions" 
+  
+  em <- "NOX_emissions" 
+  
+  cmip6_data %>% 
+    bind_rows(cmip7_data) %>% 
+    filter(variable == em) -> 
+    dd
+  
+
+    ggplot() + 
+    geom_line(data = dd, aes(year, value, color = source)) + 
+      geom_line(data = d, aes(year, value)) + 
+      
+    labs(title = em)
   
 }
   

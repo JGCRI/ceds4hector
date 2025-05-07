@@ -88,7 +88,7 @@ if(FALSE){
   library(ggplot2)
   source(here::here("scripts", "dev", "hector_comp_data.R"))
   
-  em_name <- EMISSIONS_CH4()
+  em_name <- EMISSIONS_NOX()
     
   out %>%
    # filter(grepl(x = ceds_variable, pattern = "CH4")) %>%

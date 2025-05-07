@@ -14,21 +14,21 @@ vars_to_save <- c("BC_emissions", "CH4_emissions", "CO_emissions", "ffi_emission
                   "N2O_emissions", "NH3_emissions", "NMVOC_emissions", "NOX_emissions", 
                   "OC_emissions", "SO2_emissions", "RF_tot", "RF_CO2", 
                   "RF_N2O", "RF_H2O_strat", "RF_O3_trop", "RF_BC", "RF_OC", 
-                  "RF_NH3", "RF_SO2", "RF_aci", "FCH4", "global_tas", "O3_concentration", 
+                  "RF_NH3", "RF_SO2", "RF_aci", "RF_CH4", "global_tas", "O3_concentration", 
                   "CO2_concentration", "N2O_concentration", "CH4_concentration")
 
 
 
 # 1. Run CMIP6 Historical ------------------------------------------------------
-# Run Hector with SSP2-45 scenario as the CMIP6 historical pathway. 
-ini <- system.file(package = "hector", "input/hector_ssp245.ini")
+# Run Hector with the CMIP6 scenarios but make sure that we are
+# using the corrected NOx historical emissions! So not the emissions included 
+# in the R package. 
+all_ssp_inis <- list.files("inputs", full.names = TRUE, pattern = "ssp.{,3}ini" )
 
-all_ssp_inis <- list.files(system.file(package = "hector", "input"), 
-                       full.names = TRUE, pattern = "ssp.{,3}ini" )
 
 lapply(all_ssp_inis, function(ini){
   
-  ssp_name <- gsub(basename(ini), pattern = "hector_|.ini", replace = "")
+  ssp_name <- gsub(basename(ini), pattern = "cmip6_corrected_|.ini", replace = "")
   
   hc <- newcore(ini)
   run(hc, runtodate = 2023)

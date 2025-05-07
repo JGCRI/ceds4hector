@@ -1,0 +1,249 @@
+---
+title: "Open Burning Comparison"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+
+# CMIP6 Era Open Burning Emissions
+
+```{r}
+# Load the BB4CMIP data files
+# Args
+#   f: string path to the data file to read in
+# Returns: data.frame of global emission per sector
+load_BB4CMIP_fxn <- function(f){
+  
+  # Each of the files corresponded to a type of emissions single sector.
+  d <- read.csv(f)
+  
+  # assert that the data only contains one type of data
+  ver <- unique(d$ver)
+  stopifnot(length(ver) == 1)
+  
+  sector <- unique(d$sector)
+  stopifnot(length(sector) == 1)
+  
+  # Determine emission species
+  em <- unlist(strsplit(basename(f), split = "_|-"))[[1]]
+  
+  # Extract the global values
+  inds <- which(grepl(x = colnames(d), pattern = "X"))
+  value <- as.vector(colSums(d[, inds]))
+  years <- as.vector(as.numeric(gsub(x = colnames(d)[inds], pattern = "X", replacement = "")))
+  units <- "Tg"
+  
+  # Format output
+  out <- data.frame(year = years, sector, variable = em, value, units)
+  return(out)
+  
+  
+}
+
+
+here::here("scripts", "dev", "1750-2015_v1.2_Emissions_bulk_em") %>% 
+  list.files(pattern = "csv", full.names = TRUE) -> 
+  files
+
+# Assert that all the files exists, if this throws an error 
+# see the read me in the data-raw directory. 
+stopifnot(all(file.exists(files)))
+
+files %>% 
+  lapply(load_BB4CMIP_fxn) %>%
+  do.call(what = "rbind") %>% 
+  summarise(value = sum(value), .by = c("year", "variable")) ->
+  cmip6_emissions
+
+```
+
+
+# CMIP7 Era Open Burning Emissions
+
+```{r}
+# Load the BB4CMIP data files
+# Args
+#   f: string path to the data file to read in
+# Returns: data.frame of global emission per sector
+load_BB4CMIP7_fxn <- function(f){
+  
+  # Each of the files corresponded to a type of emissions single sector.
+  d <- read.csv(f)
+  
+  # Make sure we have the global values 
+  stopifnot(unique(d$region) == "World")
+  
+  
+  
+  # Determine emission species
+  em <- unlist(strsplit(basename(f), split = "_|-"))[[1]]
+  
+  # Extract the global values
+  inds <- which(grepl(x = colnames(d), pattern = "X"))
+  
+  # Format the output 
+  pivot_longer(d, names_to = "year", values_to = "value", cols = inds) %>% 
+    mutate(year = as.numeric(gsub(replacement = "", pattern = "X", x = year))) -> 
+    out
+  
+  return(out)
+  
+  
+}
+
+
+
+
+# Import raw data files
+here::here("scripts", "dev") %>% 
+  list.files(pattern = "gfed-bb4cmip_cmip7_global_0011", full.names = TRUE) -> 
+  files
+
+# Assert that all the files exists, if this throws an error 
+# see the read me in the data-raw directory. 
+stopifnot(all(file.exists(files)))
+
+files %>% 
+  lapply(load_BB4CMIP7_fxn) %>%
+  do.call(what = "rbind") %>% 
+  mutate(variable = gsub(replacement = "", x = variable, pattern = "Emissions|Biomass Burning")) %>% 
+  mutate(variable = gsub(replacement = "", x = variable, pattern = "\\|")) %>% 
+  mutate(variable = gsub(replacement = "NMVOC", x = variable, pattern = "VOC")) %>% 
+  mutate(variable = gsub(replacement = "SO2", x = variable, pattern = "Sulfur")) -> 
+  cmip7_emissions
+
+```
+
+
+# Compare Open Burning 
+
+Okay so right off the bat these are in different units... 
+
+```{r}
+cmip6_emissions$source <- "cmip6"
+cmip7_emissions$source <- "cmip7"
+raw_emissions <- bind_rows(cmip6_emissions, cmip7_emissions)
+
+raw_emissions %>% 
+  filter(variable == em) %>% 
+  ggplot(aes(year, value, color = source)) + 
+  geom_line() + 
+  labs(title = "CMIP6 vs. CMIP7 Open Burning Emissions")
+```
+
+
+```{r}
+
+cmip6_emissions %>% 
+  mutate(value = value * 0.001, 
+         source = "cmip6") -> 
+  cmip6_emissions
+cmip7_emissions$source <- "cmip7"
+emissions <- bind_rows(cmip6_emissions, cmip7_emissions)
+
+
+quick_plot <- function(emissions, em){
+  
+  emissions %>% 
+    dplyr::filter(variable == em) -> 
+    to_plot 
+  
+  to_plot %>%  
+    summarise(min = min(value), 
+              max = max(value), 
+              mean = mean(value), 
+              sd = sd(value), 
+              .by = c("variable", "source")) -> 
+    sum_stats 
+  
+  to_plot %>% 
+    ggplot(aes(year, value, color = source), alpha = 0.5) + 
+    geom_line() + 
+    labs(title = "CMIP6 vs. CMIP7 Open Burning Emissions") -> 
+    plot 
+  
+  out <- list(plot = plot, stats = sum_stats) 
+  return(out)
+  
+}
+```
+
+
+```{r}
+quick_plot(emissions, "CH4")
+```
+
+```{r}
+quick_plot(emissions, "BC")
+```
+
+```{r}
+quick_plot(emissions, "CO")
+```
+
+```{r}
+quick_plot(emissions, "NH3")
+```
+
+```{r}
+quick_plot(emissions, "NMVOC")
+```
+
+```{r}
+quick_plot(emissions, "SO2")
+```
+
+
+It looks like there might not be any CO2 data from the CMIP6 era which seems off... but actually 
+I am wondering if it would go into the LULC emissions and not the ffi emissions! 
+
+```{r}
+quick_plot(emissions, "CO2")
+```
+
+
+
+SO2 are in the same units... 
+
+```{r}
+quick_plot(emissions, "SO2")
+```
+
+
+
+N2O are also in the same units... 
+
+
+```{r}
+emissions %>% 
+  filter(variable == "N2O") %>% 
+  mutate(value = ifelse(source == "cmip7", value * 0.001, value))  %>% 
+quick_plot(., "N2O")
+```
+
+
+What about NOx??? 
+
+```{r}
+quick_plot(emissions, "NOx")
+```
+
+
+```{r}
+# Okay YES there is a difference in the NOx emissions... 
+emissions %>% 
+  filter(variable == "NOx") %>% 
+  select(year, variable, value, source) %>% 
+  spread(source, value) %>% 
+  filter(year <= 2013) %>% 
+  mutate(diff = cmip7/cmip6) %>% pull(diff) %>% mean()
+
+# looks like the difference in the ratio is 1.535689.... 
+
+```
