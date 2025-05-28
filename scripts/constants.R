@@ -210,9 +210,7 @@ write_hector_csv <- function(x,
   git_tag <- substr(system("git rev-parse HEAD", intern=TRUE), start = 1, stop = 15)
   create_info <-  c(paste0('; created by ceds4hector on ', date(),
                            " commit ", git_tag))
-  final_lines <- append(c(paste0('; ', scn, " from ", info_source),
-                          paste0("; commit ", git_tag),
-                          paste0("; date ", date()),
+  final_lines <- append(c(create_info,
                           units_list),
                         lines)
   writeLines(final_lines, fname)
