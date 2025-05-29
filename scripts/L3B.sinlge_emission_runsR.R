@@ -96,6 +96,7 @@ rslts %>%
   single_var_runs
 
 write.csv(single_var_runs, file = file.path(DIRS$L3, "single_var_runs.csv"), row.names = FALSE)
+single_var_runs <- read.csv(file = file.path(DIRS$L3, "single_var_runs.csv"))
 
 
 # Let's rank the MSE between the total RF 
@@ -154,7 +155,7 @@ lapply(unique(rslts$scenario), function(scn){
     geom_table(data = df, aes(x = x, y = y, label = tbl),
                hjust = 0, vjust = 1) -> 
     plot 
-  fname <- file.path(DIRS$L3, "single_emissions", paste0(scn, "_only.pdf"))
+  fname <- file.path(DIRS$L3, "single_emissions", paste0(scn, "_only.png"))
   ggsave(plot, filename = fname, width = 10, height = 5.5)
   
 })
