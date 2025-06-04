@@ -42,8 +42,6 @@ lapply(all_ssp_inis, function(ini){
   out1
 
 
-
-
 # 2. Run CMIP6 Historical ------------------------------------------------------
 # Run Hector with the CMIP7 CEDS
 ini <- file.path("inputs", "hector_ceds_historical.ini")
@@ -69,13 +67,31 @@ out %>%
   out
 
 out %>% 
+  filter(scenario == "CMIP6 CEDS") %>% 
+  rename(source = scenario) ->
+  old
+
+out %>% 
+  filter(scenario == "CMIP7 CEDS") %>% 
+  rename(source = scenario) ->
+  new
+
+write.csv(old, file = file.path(DIRS$L3, "hector_CEDS_rslts_old.csv"), row.names = FALSE)
+write.csv(new, file = file.path(DIRS$L3, "hector_CEDS_rslts_new.csv"), row.names = FALSE)
+
+
+
+out %>% 
   filter(ssp %in% c("ssp245", NA)) %>% 
+  filter(year <= 2015) %>% 
   select(scenario, year, variable, value) %>% 
   spread(scenario, value) %>% 
   na.omit %>% 
   mutate(difference = `CMIP7 CEDS` - `CMIP6 CEDS`) -> 
   diff_out
   
+write.csv(diff_out, file = file.path(DIRS$L3, "hector_CEDS_diff.csv"), row.names = FALSE)
+
 
 # Some summary results 
 diff_out %>% 
@@ -84,16 +100,10 @@ diff_out %>%
   knitr::kable()
 
 
-# 4. Save results for all variables --------------------------------------------
-# Save the results for all of the hector variables 
-write.csv(out, file = file.path(DIRS$L3, "hector_CEDS_rslts_data.csv"), row.names = FALSE)
-write.csv(diff_out, file = file.path(DIRS$L3, "hector_difference.csv"), row.names = FALSE)
-
-
 # 6.Plot Results ---------------------------------------------------------------
 
 # Create the figure directories and general them 
-FIG_DIR_DIFF <- file.path(DIRS$L3, "figs_diff")
+FIG_DIR_DIFF <- file.path(DIRS$L3, "figs_difference_in_historical")
 FIG_DIR <- file.path(DIRS$L3, "figs")
 
 dir.create(FIG_DIR, showWarnings = FALSE)

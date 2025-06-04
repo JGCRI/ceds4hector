@@ -26,10 +26,12 @@ vars <- c("BC_emissions", "CH4_emissions", "CO_emissions", "ffi_emissions",
 # 1. "Default" Hector Run ------------------------------------------------------
 
 # Run default hector
-ini <- list.files("inputs", full.names = TRUE, pattern = "ssp245" )
+ini <- list.files("inputs", full.names = TRUE, pattern = "ssp245")
 hc  <- newcore(ini, name  ="default hector")
 run(hc, runtodate = FINAL_HIST_YEAR)
-out1 <- fetchvars(hc, dates = YRS, vars = vars)
+fetchvars(hc, dates = YRS, vars = vars) %>% 
+  filter(year <= 2014) -> 
+  out1
 
 # 2. Single Emission Runs ------------------------------------------------------
 
@@ -106,10 +108,16 @@ rslts %>%
   left_join(out1 %>% 
               select(year, variable, value), by = join_by(year, variable)) %>% 
   mutate(SE = (value - new_value)^2) %>% 
-  summarise(MSE = mean(SE), .by = c("scenario", "variable")) %>% 
-  arrange(desc(MSE)) -> 
+  summarise(RMSE = sqrt(mean(SE, na.rm = TRUE)), .by = c("scenario", "variable")) %>% 
+  arrange(variable, desc(RMSE)) -> 
   MSE_table
 
+
+MSE_table %>% 
+  filter(variable %in% c(RF_TOTAL(), GLOBAL_TAS()))  -> 
+  RMSE_table
+
+write.csv(RMSE_table, file = file.path(DIRS$L3, "single_var_runs-RMSE.csv"), row.names = FALSE)
 
 
 # Single Variable Runs 
@@ -134,14 +142,14 @@ lapply(unique(rslts$scenario), function(scn){
   MSE_table %>%
     filter(scenario == scn) %>% 
     filter(variable %in% vars_to_plot) %>% 
-     mutate(MSE = signif(MSE, digits = 3)) ->
+     mutate(RMSE = signif(RMSE, digits = 3)) ->
     tb
   
   tbs <- lapply(split(tb, tb$variable), "[", -1)
   
   df <- tibble(x = rep(-Inf, length(tbs)), 
                y = rep(Inf, length(tbs)), 
-               variable = levels(as.factor(tb$variable)), 
+               variable = factor(vars_to_plot, levels = vars_to_plot, ordered = TRUE),
                tbl = tbs)
   
   ggplot() + 
