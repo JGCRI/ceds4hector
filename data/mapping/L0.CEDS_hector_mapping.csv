@@ -1,0 +1,14 @@
+# Map CEDS emissions to hector units , this should probably map all the CEDS sectors to the RCMIP aggregation but we are short ontime ,,,,,,
+# cf is the conversion factor from CEDS to Hector,,,,,,,
+# the total column indicates if the emissions are complete for all sectors 1 or need to be aggregaed with additional sources 0,,,,,,,
+ceds_variable,ceds_units,cf,hector_variable,hector_units,notes_on_cf,hector_total ,hector_sector
+SO2,ktSO2,0.5,SO2_emissions,Gg S,(32/64),0,0
+BC,ktC,0.001,BC_emissions,Tg,,0,0
+CH4,ktCH4,0.001,CH4_emissions,Tg CH4,,1,Industry
+CO,ktCO,0.001,CO_emissions,Tg CO,,0,Industry
+CO2,ktCO2,2.72727E-07,ffi_emissions,Pg C/yr,(12/44) *  0.00001 ,1,0
+N2O,ktN2O,0.000636364,N2O_emissions,Tg N,(28/44) * 0.001,1,0
+NH3,ktNH3,0.001,NH3_emissions,Tg,,0,Industry
+NMVOC,ktNMVOC,0.001,NMVOC_emissions,Tg NMVOC,,0,Industry
+NOx,ktNO2,0.000304348,NOX_emissions,Tg N,(14/46)*0.001,0,Industry
+OC,ktC,0.001,OC_emissions,Tg,,0,Industry

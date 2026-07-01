@@ -13,7 +13,7 @@ scripts <- c("./scripts/L0.CEDS-emiss.R",
 
 # Run each script
 for (s in scripts){
-
+    print(s)
     source(s)
 }
 

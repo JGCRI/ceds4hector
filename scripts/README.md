@@ -1,4 +1,4 @@
-The CEDS data set does not provide all the emission spieces needed to complete a Hector run, this workflow combines the CEDS emissions with emissions from RCMIP. 
+The CEDS data set does not provide all the emission species needed to complete a Hector run, this workflow combines the CEDS emissions with emissions from RCMIP. 
 
 
 * `constants.R`: contains helper functions and the packages required by other project scripts
