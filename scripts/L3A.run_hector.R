@@ -14,7 +14,7 @@ vars_to_save <- c("BC_emissions", "CH4_emissions", "CO_emissions", "ffi_emission
                   "N2O_emissions", "NH3_emissions", "NMVOC_emissions", "NOX_emissions", 
                   "OC_emissions", "SO2_emissions", "RF_tot", "RF_CO2", 
                   "RF_N2O", "RF_H2O_strat", "RF_O3_trop", "RF_BC", "RF_OC", 
-                  "RF_NH3", "RF_SO2", "RF_aci", "FCH4", "global_tas", "O3_concentration", 
+                  "RF_NH3", "RF_SO2", "RF_aci", "RF_CH4", "global_tas", "O3_concentration", 
                   "CO2_concentration", "N2O_concentration", "CH4_concentration")
 
 
