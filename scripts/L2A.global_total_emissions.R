@@ -5,14 +5,14 @@
 # Load the project constants and basic functions
 source(here::here("scripts", "constants.R"))
 
-
 # 1. Load Data -----------------------------------------------------------------
 # Load the L1 emissions which combine CEDS and open burning emissions. 
 L1_emiss_data <- read.csv(file.path(DIRS$L1, "ceds_burnning_emiss.csv"))
 
 
-# Read in the default V3.2 emissions and limit until the year 2023. 
-read.csv(file.path(DIRS$L0, "L0.V32_emissions.csv")) %>% 
+# Read in the default hector emissions and limit to 2023. 
+list.files(path = DIRS$L0, pattern = "L0.hectorV", full.names = TRUE) %>% 
+  read.csv %>% 
   filter(year <=  max(L1_emiss_data$year)) -> 
   default_emiss
 

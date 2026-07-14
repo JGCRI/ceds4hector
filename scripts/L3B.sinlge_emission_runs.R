@@ -19,7 +19,7 @@ YRS <- 1750:FINAL_HIST_YEAR
 vars <- c("BC_emissions", "CH4_emissions", "CO_emissions", "ffi_emissions",
           "N2O_emissions", "NH3_emissions", "NMVOC_emissions", "NOX_emissions",
           "OC_emissions", "SO2_emissions", "RF_tot", "RF_CO2",
-          "RF_N2O", "RF_H2O_strat", "RF_O3_trop", "RF_BC", "RF_OC", "FCH4",
+          "RF_N2O", "RF_H2O_strat", "RF_O3_trop", "RF_BC", "RF_OC", "RF_CH4",
           "RF_NH3", "RF_SO2", "RF_aci", "global_tas", "O3_concentration",
           "CO2_concentration", "N2O_concentration", "CH4_concentration", NBP(), NPP(), VEG_C())
 
@@ -60,7 +60,7 @@ lapply(unique(input_data$variable), function(var){
   if(grepl(pattern = "emissions", var)){
     
     if(var == EMISSIONS_CH4()){
-      vars_to_keep <- c(vars_to_keep, "FCH4", CONCENTRATIONS_CH4())
+      vars_to_keep <- c(vars_to_keep, "RF_CH4", CONCENTRATIONS_CH4())
     } else if(var %in% c(FFI_EMISSIONS(), DACCS_UPTAKE(), LUC_EMISSIONS(), LUC_UPTAKE())) {
       vars_to_keep <- c(vars_to_keep, RF_CO2(), NBP(), CONCENTRATIONS_CO2())
     } else if(var %in% c(EMISSIONS_CO(), EMISSIONS_NMVOC(), EMISSIONS_NOX(), NAT_EMISSIONS_N2O())) {
