@@ -5,6 +5,7 @@
 # 0. Set Up --------------------------------------------------------------------
 library(dplyr)
 library(tidyr)
+source("scripts/constants.R")
 
 # 1. Benchmark Data ---------------------------------------------------------
 
@@ -30,10 +31,6 @@ conc_df %>%
 
 
 # 2. Load Hector Output --------------------------------------------------------
-
-
-write.csv(old, file = file.path(DIRS$L3, "hector_CEDS_rslts_old.csv"), row.names = FALSE)
-write.csv(new, file = file.path(DIRS$L3, "hector_CEDS_rslts_new.csv"), row.names = FALSE)
 
 c(file.path(DIRS$L3, "hector_CEDS_rslts_old.csv"), 
   file.path(DIRS$L3, "hector_CEDS_rslts_new.csv")) %>% 
