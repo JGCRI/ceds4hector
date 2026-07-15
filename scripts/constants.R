@@ -5,7 +5,9 @@
 remove(list = ls())
 
 DEBUG <- FALSE
-#remotes::install_github("jgcri/hector", force = TRUE)
+HECTOR_V <- "3.5.0"
+CEDS_V <- "v_2025_03_18"
+#remotes::install_github(paste0("jgcri/hector@v", HECTOR_V), force = TRUE)
 
 # Load the packages
 library(assertthat)
@@ -20,12 +22,12 @@ library(readxl)
 
 # TODO probably use a package manager but for now this is probably good enough
 stopifnot(packageVersion("assertthat") == "0.2.1")
-stopifnot(packageVersion("data.table") == "1.17.0")
+stopifnot(packageVersion("data.table") == "1.17.8")
 stopifnot(packageVersion("dplyr") == "1.1.4")
 stopifnot(packageVersion("here") == "1.0.1")
 stopifnot(packageVersion("tidyr") == "1.3.1")
 stopifnot(packageVersion("zoo") == "1.8.14")
-stopifnot(packageVersion("hector") == "3.2.0")
+stopifnot(packageVersion("hector") == HECTOR_V)
 stopifnot(packageVersion("readxl") == "1.4.5")
 
 
@@ -161,7 +163,6 @@ uniform_extend_df <- function(df, mean_yrs, extend_to){
 }
 
 
-
 # Write a hector input table Save the hector csv files into the proper hector format
 # Args
 #   x: data table containing Hector input values
@@ -193,7 +194,18 @@ write_hector_csv <- function(x,
     assert_that(all(!missing), msg = paste("Missing required variable(s):", paste0(required[missing], collapse = ", ")))
   }
   
-  # Transform the data frame into the wide format that Hector expects.
+  # Before transforming the data to wide format make sure that only one entry 
+  # is being read in per year/variable. 
+  check_data <- as.data.table(x)[, list(Date = year, variable)]
+  stopifnot(nrow(check_data) == nrow(distinct(check_data)))
+  
+  # Helpful debugging chunk for when there are duplicates creeping into the data frame
+  if(FALSE){
+    input_data <- dcast(as.data.table(x)[, list(Date = year, variable, value)], Date ~ variable)
+    which(input_data %>% select(-Date)> 1, arr.ind = TRUE)
+    input_data[271, ]
+  }
+  
   input_data <- dcast(as.data.table(x)[, list(Date = year, variable, value)], Date ~ variable)
   
   # Add the header information to the csv table.
@@ -219,9 +231,6 @@ write_hector_csv <- function(x,
   return(fname)
   
 }
-
-
-
 
 # Args
 #   ini: lines of a Hector ini file.

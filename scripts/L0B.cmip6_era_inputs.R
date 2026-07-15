@@ -1,5 +1,5 @@
-# Description: Correct the CMIP6 era NOx emissions! 
-# The CMIP6 era CEDS NOx Emissions are in the correct units. Replace rcmip global
+# Description: Correct the CMIP6 era NOx emissions & update the natural emissions. 
+# The CMIP6 era CEDS NOx Emissions are in the incorrect units. Replace rcmip global
 # NOX emissions with the rcmip anthropocentric (ffi) NOx + the open burning 
 # emissions data set for the CMIP6 historical years. This script does have to be 
 # run after the L0.BB4CMIP-emiss.R script is run. 
@@ -69,6 +69,9 @@ stopifnot(file.exists(rcmip_emissions_file)) # If this throws an error you need 
 open_burning_file <- file.path(DIRS$L0, "L0.BB4CMIP_emissions.csv")
 stopifnot(file.exists(open_burning_file)) # If this throws an error you need to run the L0.BB4CMIP-emiss.R script
 
+
+# 2. NOX Open Burning Correction  ---------------------------------------------
+
 # Now load the data. 
 read.csv(rcmip_emissions_file) %>% 
   filter(Scenario == "historical") %>% 
@@ -130,10 +133,49 @@ lapply(cmip6_emission_files, function(f){
 }) -> 
   corrected_emission_data_tables
 
+
 # Extract the scenario names. 
 scn_names <- gsub(pattern = "_emiss-constraints_rf.csv", 
                   replacement = "", 
                   x = basename(cmip6_emission_files))
+
+# 3. Natural Emissions  --------------------------------------------------------
+
+# First copy over a set of the core inputs to be used before things are not updated. 
+core_inputs_files <- system.file(package = "hector", file.path("input", "tables", "core_inputs.csv"))
+file.copy(from = core_inputs_files, to = here::here("inputs", "tables"), overwrite = TRUE)
+
+# Now 
+
+core_inputs_files %>% 
+  read.csv(comment.char = ";") %>% 
+  pivot_longer(cols = -Date, names_to = "variable") %>% 
+  rename(year = Date) %>% 
+  filter(variable %in% c(NATURAL_CH4(), NAT_EMISSIONS_N2O())) %>% 
+  summarise(value = mean(value), .by = variable) %>% 
+  apply(MARGIN = 1, function(df){
+    
+    t(df) %>% 
+      as.data.frame() %>% 
+      cbind(year = 1745:2100)
+    
+  }) %>% 
+  bind_rows %>% 
+  mutate(scenario = "NA", 
+         units = getunits(variable)) %>% 
+  distinct -> 
+  natural_emiss_df
+
+
+
+# 4. Save the hector inputs  ---------------------------------------------------
+
+write_hector_csv(x = natural_emiss_df,
+                 write_to = DIRS$TABLES, 
+                 required = c(NATURAL_CH4(), NAT_EMISSIONS_N2O()), 
+                 info_source = "natural_emiss_cmip6CEDS") -> 
+  natural_emiss_input_table
+
 
 # Save all emission input tables. 
 emissions_tables <- mapply(save_updated_tables, 
@@ -141,7 +183,27 @@ emissions_tables <- mapply(save_updated_tables,
                            x = corrected_emission_data_tables)
 
 # Make new ini files
-lapply(FUN = write_hector_ini, emissions_tables)
+lapply(FUN = write_hector_ini, emissions_tables) -> 
+  ini_files
+
+# Update all the ini files with the new natural input data
+ini_files %>% 
+  lapply(FUN = function(ini_file){
+    
+    # Update the ini file so that it is using the new natural emissions we calculated here. 
+    ini_lines <- readLines(ini_file)
+    
+    natural_ch4_indx <- which(grepl(x = ini_lines, pattern = NATURAL_CH4()))
+    new_nat_ch4 <- gsub(x = ini_lines[natural_ch4_indx], pattern = "core_inputs.csv", replacement = basename(natural_emiss_input_table))
+    ini_lines[natural_ch4_indx] <- new_nat_ch4
+    
+    natural_n2o_indx <- which(grepl(x = ini_lines, pattern = NAT_EMISSIONS_N2O()))
+    new_nat_n2o <- gsub(x = ini_lines[natural_n2o_indx], pattern = "core_inputs.csv", replacement = basename(natural_emiss_input_table))
+    ini_lines[natural_n2o_indx] <- new_nat_n2o
+    
+    writeLines(text = ini_lines, con = ini_file)
+    
+  })
 
 
 # Z. Checking ------------------------------------------------------------------
