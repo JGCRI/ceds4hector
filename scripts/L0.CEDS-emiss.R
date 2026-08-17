@@ -25,7 +25,7 @@ find_my_ceds_files <- function(DIR, ceds_v = "v_2025_03_18"){
   assert_that(dir.exists(DIR))
   
   # Find all the possible ceds files
-  all_ceds_files <- list.files(DIR, pattern = "CEDS")
+  all_ceds_files <- list.files(DIR, pattern = "CEDS", recursive = TRUE)
   assert_that(length(all_ceds_files) >= 1, msg = "no CEDS files found")
   
   # Now check to see if there are global emissions by sector... it

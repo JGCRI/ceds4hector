@@ -1,4 +1,48 @@
-The CEDS data set does not provide all the emission species needed to complete a Hector run, this workflow combines the CEDS emissions with emissions from RCMIP. 
+This is project converts the CEDS data into the hector expected inputs, also because 
+CEDS does not include all of the input time series required by hector (halocarbons or 
+the contributions from open burning) additional data must be processed and formatted 
+to set up the complete historical hector input files. 
+
+
+## Dependencies 
+
+### raw-data 
+
+This workflow relies on CEDS data and also some additional data sources. To download 
+and install all the raw-data run the following command from terminal or download 
+the files from the `data/raw-data/1.raw-data.urls.txt` file into the `data/raw-data`
+directory. 
+
+
+```
+cd data/raw-data
+bash 1.get-raw-data.sh
+```
+
+
+### R 
+
+This workflow depends on your standard R packages and a JGCRI package. 
+
+
+I've set up a renv file to help with setup, `renv::status()` and/or `renv::restore()` to load the package 
+environment.
+
+But I've found renv to sometimes be finicky, so here are some explicit notes on my R version 
+the JGCRI package used in ceds4hector. 
+
+```
+R version 4.3.3 (2024-02-29)
+Platform: aarch64-apple-darwin20 (64-bit)
+Running under: macOS 26.5.2
+```
+
+* hector branch halocarb_fix - TODO this should probably be updated/clarified 
+* matilda V1.1.0
+
+
+
+
 
 
 * `constants.R`: contains helper functions and the packages required by other project scripts
