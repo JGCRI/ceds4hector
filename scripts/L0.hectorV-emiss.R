@@ -1,5 +1,5 @@
 # Description: Load the default ssp245 hector emissions included in 
-# the Hector V3.2 release which originally came from RCMIP I. 
+# the Hector V3.5 release which originally came from RCMIP I. 
 
 
 # 0. Set Up --------------------------------------------------------------------

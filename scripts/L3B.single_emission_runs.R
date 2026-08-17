@@ -103,7 +103,7 @@ single_var_runs <- read.csv(file = file.path(DIRS$L3, "single_var_runs.csv"))
 
 # Let's rank the MSE between the total RF 
 rslts %>% 
- # filter(variable %in% c(RF_TOTAL(), GLOBAL_TAS())) %>% 
+  # filter(variable %in% c(RF_TOTAL(), GLOBAL_TAS())) %>% 
   rename(new_value = value) %>% 
   left_join(out1 %>% 
               select(year, variable, value), by = join_by(year, variable)) %>% 
@@ -127,12 +127,9 @@ scn <- EMISSIONS_BC()
 lapply(unique(rslts$scenario), function(scn){
   
   vars_to_plot <- c(scn, RF_TOTAL(), GLOBAL_TAS())
-<<<<<<< HEAD
   units <- c(getunits(scn), "W/m2", "degC")
   my_labels <- paste0(vars_to_plot, " (", units, ")")
   names(my_labels) <- vars_to_plot
-=======
->>>>>>> main
   
   single_var_runs %>% 
     filter(scenario == scn) %>% 
@@ -148,12 +145,8 @@ lapply(unique(rslts$scenario), function(scn){
   MSE_table %>%
     filter(scenario == scn) %>% 
     filter(variable %in% vars_to_plot) %>% 
-<<<<<<< HEAD
-     mutate(RMSE = signif(RMSE, digits = 3)) %>% 
+    mutate(RMSE = signif(RMSE, digits = 3)) %>% 
     mutate(variable = factor(variable, levels = vars_to_plot, ordered = TRUE)) -> 
-=======
-     mutate(RMSE = signif(RMSE, digits = 3)) ->
->>>>>>> main
     tb
   
   tbs <- lapply(split(tb, tb$variable), "[", -1)
@@ -166,22 +159,14 @@ lapply(unique(rslts$scenario), function(scn){
   ggplot() + 
     geom_line(data = default_to_plot, aes(year, value, color = "default")) + 
     geom_line(data = single_emiss_to_plot, aes(year, value, color = "CEDS")) + 
-<<<<<<< HEAD
     facet_wrap("variable", scales = "free", labeller = as_labeller(my_labels)) + 
-=======
-    facet_wrap("variable", scales = "free") + 
->>>>>>> main
     scale_color_manual(values = c("default" = "darkgrey", CEDS = "red")) + 
     labs(y = NULL, x = NULL) + 
     theme(legend.position = "bottom", legend.title = element_blank()) + 
     labs(title = paste0("Deafult Emissions + CEDS ", scn, " only")) + 
     geom_table(data = df, aes(x = x, y = y, label = tbl),
                hjust = 0, vjust = 1) -> 
-<<<<<<< HEAD
     plot; plot
-=======
-    plot 
->>>>>>> main
   fname <- file.path(DIRS$L3, "single_emissions", paste0(scn, "_only.png"))
   ggsave(plot, filename = fname, width = 10, height = 5.5)
   

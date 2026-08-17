@@ -1,5 +1,5 @@
 # Description: Read in the CEDS L1 emissions and add add in the missing 
-# historical emissions from the default V3.2 table. 
+# historical emissions from the default V3.5 table. 
 
 # 0. Set Up --------------------------------------------------------------------
 # Load the project constants and basic functions
