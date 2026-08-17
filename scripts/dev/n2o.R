@@ -2,14 +2,14 @@
 
 # 0. Set Up --------------------------------------------------------------------
 # Start from a clean environment
-# TODO this would be dropped if written as a function like gcamdata
+# this would be dropped if written as a function like gcamdata
 remove(list = ls())
 
 # Load the project constants and basic functions
 source(here::here("scripts", "constants.R"))
 
 
-# TODO this is temporary but right now the rcmip-emissions are not being pulled
+# this is temporary but right now the rcmip-emissions are not being pulled
 # in atuomatically
 "~/Documents/2024/hector-CEDS/data/raw-data/rcmip-emissions-annual-means-v5-1-0.csv" %>%
     read.csv() %>%

@@ -118,7 +118,6 @@ read.csv(rcmip_file_emiss) %>%
 # need to blend together potentially some of the older emissions as well and
 # blend with the near future values we will want total emissions for each of the
 # spieces readily available.
-# TODO add the SF, land use albedo and so on into the mix?
 
 # Load the RCMIP to Hector mapping file.
 rcmip_hector_mapping <- read.csv(file = file.path(DIRS$MAPPING, "RCMIP_Hector_mapping.csv"),

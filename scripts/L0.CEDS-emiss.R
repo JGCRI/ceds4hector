@@ -3,8 +3,10 @@
 # sources (exclude things like biomass burning) and must be combined with 
 # other data sources before they can be passed into hector. 
 # 
-# TODO add citation 
-
+# Hoesly, R., Smith, S. J., Ahsan, H., Prime, N., O'Rourke, P., Crippa, M., 
+# Klimont, Z., Guizzardi, D., Feng, L., Harkins, C., MCDONALD, B., & Wang, S. 
+# (2025). CEDS v_2025_03_18 Aggregate Data (Versions v_2025_03_18) [Dataset]. 
+# Zenodo. https://doi.org/10.5281/zenodo.15059443
 
 
 # 0. Set Up --------------------------------------------------------------------
@@ -80,9 +82,7 @@ write.csv(out, file = file.path(DIRS$L0, "L0.CEDS_emissions.csv"), row.names = F
 
 
 # Z. Comparison with Hector inputs ---------------------------------------------
-# TODO remove this eventually after feel good about things but this
-# line will load hector_comp which is the default set of emissions
-# that is useful for comparing results with
+# Quick QAQC, set by default to FALSE
 if(FALSE){
   
   library(ggplot2)

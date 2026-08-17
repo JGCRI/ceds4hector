@@ -46,7 +46,7 @@ wide_results %>%
 # Since these are full total global emission the sector information will be 
 # coded as 0 and we will set the source as the approporate hector version.
 hector %>%  
-  # TODO the getunits call will return a warning message and must 
+  # Note the getunits call will return a warning message and must 
   # be resolved with a if_else statement to replace NAs, this can be 
   # addressed with https://github.com/JGCRI/hector/issues/774 
   mutate(source = paste0("V", HECTOR_V), 
