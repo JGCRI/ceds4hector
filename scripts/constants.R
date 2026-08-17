@@ -20,7 +20,6 @@ library(hector)
 library(readxl)
 
 
-# TODO probably use a package manager but for now this is probably good enough
 stopifnot(packageVersion("assertthat") == "0.2.1")
 stopifnot(packageVersion("data.table") == "1.17.8")
 stopifnot(packageVersion("dplyr") == "1.1.4")
@@ -31,8 +30,6 @@ stopifnot(packageVersion("hector") == HECTOR_V)
 stopifnot(packageVersion("readxl") == "1.4.5")
 
 
-# TODO packages that are probably not going to be required but could be helpful during
-# the developmental stage.
 library(ggplot2)
 
 # 1. Set Up Directories --------------------------------------------------------

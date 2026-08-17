@@ -32,7 +32,6 @@ save_updated_tables <- function(x,
   fname <- file.path(write_to, paste0(info_source, '_', scn, end_tag, '.csv'))
   
   # Add the header information to the csv table.
-  # TODO look into a more efficient way to do this, one that does not
   # require intermediate products to be written out to the disk.
   readr::write_csv(x, fname, append = FALSE, col_names = TRUE)
   lines <- readLines(fname)

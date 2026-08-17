@@ -28,14 +28,12 @@ emissions_both_sources %>%
   summarise(value = sum(value), .by = c("year", "variable", "units")) -> 
   out
 
-# TODO I am not sure about this file name....
 write.csv(out, file = file.path(DIRS$L1, "ceds_burnning_emiss.csv"), row.names = FALSE)
 
 
 # Z. Diagnostic plots ---------------------------------------------
+# Quick QAQC to take a look at how script results comapre with pervious versions. 
 if(FALSE){
-  
-
   
   file.path(DIRS$L1, "ceds_burnning_emiss-og.csv") %>% 
     read.csv %>% 

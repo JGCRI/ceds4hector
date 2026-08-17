@@ -82,7 +82,6 @@ ceds_data %>%
 
 # 1.B. Convert to Hector units --------------------------------------------------
 # Map the CEDS to Hector emission names and units
-# TODO should need to add some better notes about why this is incomplete.
 combo_emissions %>%
     inner_join(mapping, by = "ceds_variable") %>%
     mutate(value = ceds_value * cf) %>%

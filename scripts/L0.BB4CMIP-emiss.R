@@ -100,7 +100,6 @@ write.csv(out, file = file.path(DIRS$L0, "L0.BB4CMIP_emissions.csv"), row.names 
 # Z. Comparison with Hector inputs ---------------------------------------------
 if(FALSE){
 
-    # TODO remove this eventually after feel good about things
     source(here::here("scripts", "dev", "hector_comp_data.R"))
     hector_comp$source <- "hector"
 

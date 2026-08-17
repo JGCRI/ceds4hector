@@ -1,4 +1,4 @@
-wget -i raw-data.urls.txt
+wget -i 1.raw-data.urls.txt
 
 for file in *.zip; do
     unzip "$file" && rm "$file"

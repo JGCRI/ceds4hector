@@ -1,6 +1,6 @@
 # Objective: launch the entire workflow from this single script, just
 # source this file.
-# TODO
+
 # Ideas
 #   - use drake?
 #   - use renv to guarantee the package versions

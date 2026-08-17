@@ -66,7 +66,6 @@ mapply(my_run_hector, ini = inis, name = names, SIMPLIFY = FALSE) %>%
 
 # 2. CEDS driven Hector run ----------------------------------------------------
 
-# TODO this path should be updated to where the ceds ini file lives
 ini <- here::here("inputs", "hector_ceds_historical.ini")
 
 ceds_out <- my_run_hector(ini, name = "CEDS")

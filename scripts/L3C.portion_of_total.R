@@ -12,14 +12,16 @@ library(ggplot2)
 
 here::here("data/L0/L0.CEDS_emissions.csv") %>% 
   read.csv() %>% 
-  select(year, variable, ceds_value = value) %>%  
+  rename(ceds_value = value) %>% 
+  select(all_of(c("year", "variable", "ceds_value"))) %>%  
   mutate(variable = if_else(variable == FFI_EMISSIONS(), "CO2", variable)) -> 
   ceds
 
 
 here::here("data/L2/hector_ceds.csv") %>% 
   read.csv() %>% 
-  select(year, variable, global_value = value) -> 
+  rename(global_value = value) %>% 
+  select(all_of(c("year", "variable", "global_value"))) -> 
   global
 
 # Combine the CO2 emissions into a single category 
