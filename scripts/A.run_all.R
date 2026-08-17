@@ -1,5 +1,5 @@
 # Run all of the files at once. 
-
+#remotes::install_github("jgcri/hector@v3.5.0")
 
 BASE_DIR <- here::here()
 scripts <- c("L0.BB4CMIP-emiss.R", 
