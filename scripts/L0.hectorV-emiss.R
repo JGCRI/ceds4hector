@@ -40,7 +40,7 @@ wide_results %>%
   select(all_of(to_keep)) %>% 
   pivot_longer(-Date) %>%
   select(year = Date, variable = name, value) %>%
-  filter(year <= 2023) ->
+  filter(year <= CEDS_FINAL_YEAR) ->
   hector
 
 # Since these are full total global emission the sector information will be 

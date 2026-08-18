@@ -31,8 +31,8 @@ lapply(all_ssp_inis, function(ini){
   ssp_name <- gsub(basename(ini), pattern = "cmip6_corrected_|.ini", replace = "")
   
   hc <- newcore(ini)
-  run(hc, runtodate = 2023)
-  out <- fetchvars(hc, 1750:2023, vars_to_save)
+  run(hc, runtodate = CEDS_FINAL_YEAR)
+  out <- fetchvars(hc, 1750:CEDS_FINAL_YEAR, vars_to_save)
   out$scenario <- "CMIP6 CEDS"  
   out$ssp <- ssp_name
   return(out)
@@ -46,8 +46,8 @@ lapply(all_ssp_inis, function(ini){
 # Run Hector with the CMIP7 CEDS
 ini <- file.path("inputs", "hector_ceds_historical.ini")
 hc <- newcore(ini)
-run(hc, runtodate = 2023)
-out2 <- fetchvars(hc, 1750:2023, vars_to_save)
+run(hc, runtodate = CEDS_FINAL_YEAR)
+out2 <- fetchvars(hc, 1750:CEDS_FINAL_YEAR, vars_to_save)
 out2$scenario <- "CMIP7 CEDS"
 
 
