@@ -21,7 +21,7 @@ source(here::here("scripts", "constants.R"))
 #   ceds_v: str of the release version, I think it might typically be a date
 # Returns the str of the full ceds path
 
-find_my_ceds_files <- function(DIR, ceds_v = "v_2025_03_18"){
+find_my_ceds_files <- function(DIR, ceds_v = CEDS_V){
 
   
   assert_that(dir.exists(DIR))
