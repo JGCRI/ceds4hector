@@ -2,7 +2,7 @@
 # these emissions will be combined with other CEDS and other anthropogenic
 # time series to get the total global emissions that will be used in Hector. 
 #
-# The time series were extended to 2023 by repeating the mean 2012:2022 emissions.
+# The time series were extended to CEDS_FINAL_YEAR by repeating the mean 2012:2022 emissions.
 
 # Data Source: van Marle, M. J. E., Kloster, S., Magi, B. I., Marlon, J. R., 
 # Daniau, A.-L., Field, R. D., Arneth, A., Forrest, M., Hantson, S., Kehrwald, 

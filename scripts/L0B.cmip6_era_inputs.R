@@ -86,7 +86,7 @@ read.csv(rcmip_emissions_file) %>%
   cmip6_era_antro_nox
 
 # Since the only difference between the CMIP6 and CMIP6 releases of the 
-# open burning emissions is the extension from 2015 - 2023, if we 
+# open burning emissions is the extension from 2015 - CEDS_FINAL_YEAR, if we 
 # subset the CMIP7 open burning emissions data set to only include 
 # the values pre 2015 we essentially have the CMIP6 values we need. 
 read.csv(open_burning_file) %>% 

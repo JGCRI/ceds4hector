@@ -10,7 +10,7 @@ source(here::here("scripts", "constants.R"))
 L1_emiss_data <- read.csv(file.path(DIRS$L1, "ceds_burnning_emiss.csv"))
 
 
-# Read in the default hector emissions and limit to 2023. 
+# Read in the default hector emissions and limit to CEDS_FINAL_YEAR 
 list.files(path = DIRS$L0, pattern = "L0.hectorV", full.names = TRUE) %>% 
   read.csv %>% 
   filter(year <=  max(L1_emiss_data$year)) -> 
